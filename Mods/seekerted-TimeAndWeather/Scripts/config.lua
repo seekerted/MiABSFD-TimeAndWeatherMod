@@ -28,7 +28,7 @@ end
 function Config.Read(ReadKey)
 	Utils.Log("Reading from config file this key: %s", ReadKey)
 
-	local ConfigFile = OpenConfigFile()
+	local ConfigFile = Open()
 	local ReturnValue = nil
 
 	if ConfigFile == nil then
@@ -42,9 +42,9 @@ function Config.Read(ReadKey)
 				break
 			end
 		end
-	end
 
-	ConfigFile:close()
+		ConfigFile:close()
+	end
 
 	Utils.Log("Retrieved value: %s", ReturnValue)
 	return ReturnValue
