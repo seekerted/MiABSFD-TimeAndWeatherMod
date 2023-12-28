@@ -21,6 +21,29 @@ local TIME_DILATION = {
 	[5] = 6,
 }
 
+local function GetLayerNoFromMapNo(MapNo)
+	if MapNo <= 9 then
+		return 1
+	elseif MapNo <= 20 then
+		return 2
+	elseif MapNo <= 29 then
+		return 3
+	elseif MapNo <= 38 then
+		return 4
+	elseif MapNo <= 50 then
+		return 5
+	else
+		-- Edge Cases
+
+		-- Belchero Orphanage has MapNo 80.
+		if MapNo == 80 then
+			return 1
+		end
+
+		return 0
+	end
+end
+
 -- Return a table based on the Surface Time.
 -- {Minutes [0-59], Hours [0-23], Weekdate [0-6]}
 local function GetSimpleSurfaceTime()
@@ -77,7 +100,7 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 		MapStayTime = math.floor(MIASpawnManager.MapStayTime)
 	end
 
-	-- TODO: figure out what layer the player is in ??
+	local CurrentLayer = GetLayerNoFromMapNo(Param_BP_MIAGameInstance_C:get().PrevMapNo)
 
 	local TimeElapsed = MapStayTime * TIME_DILATION[CurrentLayer]
 	Utils.Log("Time elapsed: %dmin Surface Time (%ds IRL time); Time Dilation: %dx", TimeElapsed, MapStayTime, TIME_DILATION[CurrentLayer])
