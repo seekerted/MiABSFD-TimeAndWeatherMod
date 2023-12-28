@@ -21,6 +21,11 @@ local TIME_DILATION = {
 	[5] = 6,
 }
 
+-- Set Surface Time while constraining it to one week.
+local function SetSurfaceTime(NewSurfaceTime)
+	SurfaceTime = NewSurfaceTime % (MINS_IN_DAY * 7)
+end
+
 local function GetLayerNoFromMapNo(MapNo)
 	if MapNo <= 9 then
 		return 1
@@ -104,7 +109,7 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 
 	local TimeElapsed = MapStayTime * TIME_DILATION[CurrentLayer]
 	Utils.Log("Time elapsed: %dmin Surface Time (%ds IRL time); Time Dilation: %dx", TimeElapsed, MapStayTime, TIME_DILATION[CurrentLayer])
-	SurfaceTime = SurfaceTime + TimeElapsed
+	SetSurfaceTime(SurfaceTime + TimeElapsed)
 
 	CurrentLayer = Param_BP_MIAGameInstance_C:get().GetStageFloorNo()
 	Utils.Log("Set current layer to %d", CurrentLayer)
