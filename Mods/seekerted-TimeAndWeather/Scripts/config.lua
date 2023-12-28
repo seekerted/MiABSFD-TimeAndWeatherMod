@@ -2,13 +2,13 @@ local Utils = require("Utils")
 
 local Config = {}
 
-local ConfigFileName = "config.txt"
-local ResourceDirectory = "Mods/" .. Utils.ModAuthor .. "-" .. Utils.ModName .. "/"
+local CONFIG_FILE_NAME = "config.txt"
+local RES_DIR = "Mods/" .. Utils.ModAuthor .. "-" .. Utils.ModName .. "/"
 
 -- Opens the config file, and returns it.
 -- If it doesn't exist, create it but return nil.
 local function Open()
-	local ConfigFullFileName = ResourceDirectory .. ConfigFileName
+	local ConfigFullFileName = RES_DIR .. CONFIG_FILE_NAME
 	Utils.Log("Opening config file: %s", ConfigFullFileName)
 	local ConfigFile = io.open(ConfigFullFileName, "r")
 
