@@ -5,9 +5,12 @@ Utils.Log("Starting Time and Weather Mod by Ted the Seeker")
 Utils.Log(string.format("Version %s", Utils.ModVer))
 Utils.Log(_VERSION)
 
-local SaveSlot = nil
-local SurfaceTime = nil
-local CurrentLayer = 1
+-- Table of the current loaded Save
+local Save = {
+	SlotIndex = nil,
+	-- Surface Time always expressed in seconds
+	SurfaceTime = nil,
+}
 
 local MINS_IN_HOUR = 60
 local MINS_IN_DAY = MINS_IN_HOUR * 24
@@ -23,7 +26,7 @@ local TIME_DILATION = {
 
 -- Set Surface Time while constraining it to one week.
 local function SetSurfaceTime(NewSurfaceTime)
-	SurfaceTime = NewSurfaceTime % (MINS_IN_DAY * 7)
+	Save.SurfaceTime = NewSurfaceTime % (MINS_IN_DAY * 7)
 end
 
 local function GetLayerNoFromMapNo(MapNo)
@@ -41,7 +44,8 @@ local function GetLayerNoFromMapNo(MapNo)
 		-- Edge Cases
 
 		-- Belchero Orphanage has MapNo 80.
-		if MapNo == 80 then
+		-- Orth has MapNo 60.
+		if MapNo == 80 or MapNo == 60 then
 			return 1
 		end
 
@@ -51,7 +55,7 @@ end
 
 -- Return a table based on the Surface Time.
 -- {Minutes [0-59], Hours [0-23], Weekdate [0-6]}
-local function GetSimpleSurfaceTime()
+local function GetSurfaceTimeDetailed(SurfaceTime)
 	return {
 		Minutes = SurfaceTime % MINS_IN_HOUR,
 		Weekdate = SurfaceTime // (MINS_IN_DAY),
@@ -59,25 +63,11 @@ local function GetSimpleSurfaceTime()
 	}
 end
 
--- Return Surface Time in relation to player's current weekdate, hour, and minute.
+-- Return Surface Time in relation to player's current weekdate, hour, and minute. All 0-based.
 local function GetSurfaceTimeFromOSDateTime()
 	local CurrentDateTime = os.date("*t")
 
 	return CurrentDateTime.min + (CurrentDateTime.hour * MINS_IN_HOUR) + ((CurrentDateTime.wday - 1) * MINS_IN_DAY)
-end
-
--- Called when the player selects a save to load.
--- Index 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
-local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
-	Utils.Log("Player loaded save in slot %d", Param_Index:get())
-
-	SaveSlot = Param_Index:get()
-	SurfaceTime = Config.Read(SaveSlot)
-
-	if SurfaceTime == nil then
-		SurfaceTime = GetSurfaceTimeFromOSDateTime()
-		Utils.Log("No Surface Time entry. Setting to %d", SurfaceTime)
-	end
 end
 
 local function MakeTimePresetTransitionInstantaneous()
@@ -91,39 +81,79 @@ local function MakeTimePresetTransitionInstantaneous()
 	BP_MapEnvironment_C.TransitionTime = 0
 end
 
--- Called just before the map changes, so we can still get the variables from the current map.
-local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
-	Utils.Log("Change Level %d", Param_MapNo:get())
+-- Index 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
+local function LoadSaveDataFromSlot(Index)
+	Utils.Log("Loading data from selected slot %d", Index)
 
-	-- Use MIASpawnManager as it keeps time on how long the player spent in each map.
-	local MapStayTime = nil
-	local MIASpawnManager = FindFirstOf("MIASpawnManager")
-	if not MIASpawnManager:IsValid() then
-		Utils.Log("MIASpawnManager is not valid.")
-		MapStayTime = 0
-	else
-		MapStayTime = math.floor(MIASpawnManager.MapStayTime)
+	-- Get the data for the current save
+	Save.SlotIndex = Index
+	Save.SurfaceTime = tonumber(Config.Read(Index))
+
+	if Save.SurfaceTime == nil then
+		Save.SurfaceTime = GetSurfaceTimeFromOSDateTime()
+		Utils.Log("No Surface Time entry. Setting to %d", Save.SurfaceTime)
+	end
+end
+
+-- Set Abyss Time to match Surface Time
+local function UpdateAbyssTimeToSurfaceTime(BP_MIAGameInstance_C, SurfaceTime)
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return
 	end
 
-	local CurrentLayer = GetLayerNoFromMapNo(Param_BP_MIAGameInstance_C:get().PrevMapNo)
-
-	local TimeElapsed = MapStayTime * TIME_DILATION[CurrentLayer]
-	Utils.Log("Time elapsed: %dmin Surface Time (%ds IRL time); Time Dilation: %dx", TimeElapsed, MapStayTime, TIME_DILATION[CurrentLayer])
-	SetSurfaceTime(SurfaceTime + TimeElapsed)
-
-	CurrentLayer = Param_BP_MIAGameInstance_C:get().GetStageFloorNo()
-	Utils.Log("Set current layer to %d", CurrentLayer)
+	local DetailedSurfaceTime = GetSurfaceTimeDetailed(SurfaceTime)
+	BP_MIAGameInstance_C.SetAbyssTime(DetailedSurfaceTime.Hours, DetailedSurfaceTime.Minutes)
+	Utils.Log("Setting Abyss Time to match Surface Time of %d (%02d:%02d)", SurfaceTime, DetailedSurfaceTime.Hours, DetailedSurfaceTime.Minutes)
 end
 
--- Called when a level has been successfully loaded and everything (I think)
-local function BP_MIAGameInstance_C__OnSuccess_884D(Param_BP_MIAGameInstance_C)
-	local SimpleSurfaceTime = GetSimpleSurfaceTime()
-	Param_BP_MIAGameInstance_C:get().SetAbyssTime(SimpleSurfaceTime.Hours, SimpleSurfaceTime.Minutes)
+local function GetElapsedSurfaceTimeOnMap(BP_MIAGameInstance_C, MapNo)
+	local ElapsedTimeInMap = 0
+
+	local GameStateBase = FindFirstOf("GameStateBase")
+	if not GameStateBase:IsValid() then
+		Utils.Log("GameStateBase is not valid.")
+	else
+		ElapsedTimeInMap = math.floor(GameStateBase.ReplicatedWorldTimeSeconds)
+	end
+
+	-- By the time this hooked function is called BP_MIAGameInstance_C.MapNo has already updated to the next map, so
+	-- we use PrevMapNo instead.
+	local CurrentLayer = GetLayerNoFromMapNo(BP_MIAGameInstance_C.PrevMapNo)
+	Utils.Log("Current layer of %d is %d", BP_MIAGameInstance_C.PrevMapNo, CurrentLayer)
+	local TimeDilation = TIME_DILATION[CurrentLayer]
+	local ElapsedTimeOnSurface = ElapsedTimeInMap * TimeDilation
+
+	Utils.Log("Time elapsed: %dmin Surface Time (%ds IRL time); Time Dilation: %dx; Map: %d, Layer: %d", ElapsedTimeOnSurface,
+			ElapsedTimeInMap, TimeDilation, BP_MIAGameInstance_C.PrevMapNo, CurrentLayer)
+	return ElapsedTimeOnSurface
 end
 
--- Just for logging purposes.
-local function MIAGameInstance__SetAbyssTime(Param_MIAGameInstance, Param_Hour, Param_Minute)
-	Utils.Log("Setting Abyss Time to %d, %d", Param_Hour:get(), Param_Minute:get())
+local function UpdateSurfaceTimeOnChangeLevel(BP_MIAGameInstance_C, MapNo)
+	Utils.Log("On change to Map %d", MapNo)
+
+	local TimeElapsed = GetElapsedSurfaceTimeOnMap(BP_MIAGameInstance_C, MapNo)
+	SetSurfaceTime(Save.SurfaceTime + TimeElapsed)
+end
+
+-- Called when the player clicks on a save to load.
+local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
+	LoadSaveDataFromSlot(Param_Index:get())
+end
+
+-- Called just before the map changes, so we can still get the variables from the current map.
+local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
+	UpdateSurfaceTimeOnChangeLevel(Param_BP_MIAGameInstance_C:get(), Param_MapNo:get())
+end
+
+-- Hook into this function in between map loads
+local function BP_MIAGameInstance_C__InitializeWeatherOnLoaded(Param_BP_MIAGameInstance_C, Param_bInitState)
+	UpdateAbyssTimeToSurfaceTime(Param_BP_MIAGameInstance_C:get(), Save.SurfaceTime)
+end
+
+local function BP_MapEnvironment_C__SetVariablesForChangeMapEnvironment(Param_BP_MapEnvironment_C, Param_TimeSegment, Param_EnvParams)
+	Utils.Log("SetVariablesForChangeMapEnvironment")
+	Utils.Log(Param_TimeSegment:get())
 end
 
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
@@ -132,19 +162,19 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 		Utils.Log("MIAGameInstance has been found")
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData", WBP_SaveLayout_C__LoadData)
-		Utils.RegisterHookOnce("/Script/MadeInAbyss.MIAGameInstance:SetAbyssTime", MIAGameInstance__SetAbyssTime)
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:InitializeWeatherOnLoaded",
+				BP_MIAGameInstance_C__InitializeWeatherOnLoaded)
 
 		RegisterConsoleCommandHandler("sat", function(FullCommand, Parameters, OutputDevice)
 			New_MIAGameInstance.SetAbyssTime(Parameters[1], Parameters[2])
 			return true
 		end)
 
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_884DEFA44E0E3C73A1DE44B096F9A105",
-				BP_MIAGameInstance_C__OnSuccess_884D)
-
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel", BP_MIAGameInstance_C__ChangeLevel)
 
-		MakeTimePresetTransitionInstantaneous()
+		-- MakeTimePresetTransitionInstantaneous()
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.BP_MapEnvironment_C:SetVariablesForChangeMapEnvironment",
+				BP_MapEnvironment_C__SetVariablesForChangeMapEnvironment)
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
