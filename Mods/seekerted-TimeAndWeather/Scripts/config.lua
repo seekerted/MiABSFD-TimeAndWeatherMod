@@ -35,8 +35,8 @@ function Config.Read(ReadKey)
 		ReturnValue = nil
 	else
 		for Line in ConfigFile:lines() do
+			-- Match each line in the format of Key=Value
 			local Key, Value = Line:match("([^=]+)=(.*)")
-			Utils.Log("%s, %s", Key, Value)
 			if ReadKey == Key then
 				ReturnValue = Value
 				break
