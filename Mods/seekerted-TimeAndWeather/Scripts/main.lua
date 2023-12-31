@@ -13,6 +13,9 @@ local Save = {
 	PrevMapNo = nil,
 }
 
+local ElapsedTimeInMap = nil
+local PreviousTimeSegment = nil
+
 local MINS_IN_HOUR = 60
 local MINS_IN_DAY = MINS_IN_HOUR * 24
 
@@ -45,7 +48,7 @@ local function GetLocalTimeFromOSDate(CurrentDateTime)
 	return CurrentDateTime.min + (CurrentDateTime.hour * MINS_IN_HOUR) + ((CurrentDateTime.wday - 1) * MINS_IN_DAY)
 end
 
-local function MakeTimePresetTransitionInstantaneous()
+local function SetTimeSegmentTransitionTime()
 	local BP_MapEnvironment_C = StaticFindObject("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.Default__BP_MapEnvironment_C")
 
 	if not BP_MapEnvironment_C:IsValid() then
@@ -53,7 +56,7 @@ local function MakeTimePresetTransitionInstantaneous()
 		return
 	end
 
-	BP_MapEnvironment_C.TransitionTime = 0
+	BP_MapEnvironment_C.TransitionTime = 60
 end
 
 -- Index 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
@@ -70,19 +73,27 @@ local function LoadSaveDataFromSlot(Index)
 	end
 end
 
--- Set Abyss Time to match Local Time
-local function UpdateAbyssTimeToLocalTime(BP_MIAGameInstance_C, LocalTime)
+-- Update Abyss Time to match the time elapsed
+local function AddElapsedTimeToAbyssTime(BP_MIAGameInstance_C, ElapsedTime)
 	if not BP_MIAGameInstance_C:IsValid() then
 		Utils.Log("BP_MIAGameInstance_C is not valid.")
 		return
 	end
 
-	local DetailedLocalTime = GetLocalTimeDetailed(LocalTime)
-	BP_MIAGameInstance_C.SetAbyssTime(DetailedLocalTime.Hours, DetailedLocalTime.Minutes)
-	Utils.Log("Update Abyss Time to match Local Time of %d (%02d:%02d)", LocalTime, DetailedLocalTime.Hours, DetailedLocalTime.Minutes)
+	local DetailedTimeElapsed = GetLocalTimeDetailed(ElapsedTime)
+
+	BP_MIAGameInstance_C.AddAbyssTime(DetailedTimeElapsed.Hours, DetailedTimeElapsed.Minutes)
+
+	local GetAbyssTimeOutParams = {}
+	BP_MIAGameInstance_C.GetAbyssTime(GetAbyssTimeOutParams, {})
+	Utils.Log("New Abyss Time: %02d:%02d (%02d:%02d+)", GetAbyssTimeOutParams.Hour, GetAbyssTimeOutParams.Minute, DetailedTimeElapsed.Hours,
+			DetailedTimeElapsed.Minutes)
 end
 
-local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C, MapNo)
+-- Compute the elapsed time on change of map. 1s of IRL game time is 1min of time elapsed in-game, multiplied by the
+-- time dilation. Time dilation is only affected when ascending to a map of lower depth, and is computed by how much
+-- was ascended (including fast travel).
+local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
 	local GameStateBase = FindFirstOf("GameStateBase")
 	if not GameStateBase:IsValid() then
 		Utils.Log("GameStateBase is not valid.")
@@ -120,13 +131,16 @@ local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C, MapNo)
 	Utils.Log("Time elapsed: %dmin Surface Time (%ds IRL time); Time Dilation: %.2fx", ElapsedTimeOnSurface, ElapsedTimeInMap,
 			TimeDilation)
 	
-	Save.PrevMapNo = MapNo
+	Save.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 	return ElapsedTimeOnSurface
 end
 
-local function UpdateLocalTimeOnChangeLevel(BP_MIAGameInstance_C, MapNo)
-	local TimeElapsed = GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C, MapNo)
-	-- SetSurfaceTime(Save.SurfaceTime + TimeElapsed)
+local function UpdateElapsedTimeInMapOnChangeLevel(BP_MIAGameInstance_C)
+	ElapsedTimeInMap = GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
+end
+
+local function BP_MIAGameInstance_C__OnSuccess_A025(Param_BP_MIAGameInstance_C)
+	AddElapsedTimeToAbyssTime(Param_BP_MIAGameInstance_C:get(), ElapsedTimeInMap)
 end
 
 -- Called when the player clicks on a save to load.
@@ -136,12 +150,7 @@ end
 
 -- Called just before the map changes, so we can still get the variables from the current map.
 local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
-	UpdateLocalTimeOnChangeLevel(Param_BP_MIAGameInstance_C:get(), Param_MapNo:get())
-end
-
--- Hook into this function in between map loads
-local function BP_MIAGameInstance_C__InitializeWeatherOnLoaded(Param_BP_MIAGameInstance_C, Param_bInitState)
-	UpdateAbyssTimeToLocalTime(Param_BP_MIAGameInstance_C:get(), Save.LocalTime)
+	UpdateElapsedTimeInMapOnChangeLevel(Param_BP_MIAGameInstance_C:get())
 end
 
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
@@ -150,21 +159,43 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 		Utils.Log("MIAGameInstance has been found")
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData", WBP_SaveLayout_C__LoadData)
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:InitializeWeatherOnLoaded",
-				BP_MIAGameInstance_C__InitializeWeatherOnLoaded)
 
 		RegisterConsoleCommandHandler("sat", function(FullCommand, Parameters, OutputDevice)
 			New_MIAGameInstance.SetAbyssTime(Parameters[1], Parameters[2])
 			return true
 		end)
 
+		RegisterConsoleCommandHandler("aat", function(FullCommand, Parameters, OutputDevice)
+			local GetAbyssTimeOutParams = {}
+			New_MIAGameInstance.GetAbyssTime(GetAbyssTimeOutParams, {})
+			Utils.Log("Current Abyss Time: %02d:%02d", GetAbyssTimeOutParams.Hour, GetAbyssTimeOutParams.Minute)
+			Utils.Log("Adding Abyss Time of %02d:%02d", Parameters[1], Parameters[2])
+			New_MIAGameInstance.AddAbyssTime(Parameters[1], Parameters[2])
+			New_MIAGameInstance.GetAbyssTime(GetAbyssTimeOutParams, {})
+			Utils.Log("New Abyss Time: %02d:%02d", GetAbyssTimeOutParams.Hour, GetAbyssTimeOutParams.Minute)
+			Utils.Log("===")
+			return true
+		end)
+
+		RegisterConsoleCommandHandler("tts", function(FullCommand, Parameters, OutputDevice)
+			local mapenv = FindFirstOf("BP_MapEnvironment_C")
+
+			mapenv.ChangeTimeSegment(Parameters[0])
+			Utils.Log("tts")
+
+			return true
+		end)
+
+		Utils.RegisterHookOnce("/Script/MadeInAbyss.MIAGameInstance:SetAbyssTime", function(self, h, m)
+			Utils.Log("SetAbyssTime %d %d", h:get(), m:get())
+		end)
+
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel", BP_MIAGameInstance_C__ChangeLevel)
 
-		MakeTimePresetTransitionInstantaneous()
+		SetTimeSegmentTransitionTime()
 
-		Utils.RegisterHookOnce("/Script/MadeInAbyss.MIAAngelScriptLevel:ChangeMap", function(self, MapNo, MapPoint)
-			Utils.Log("ChangeMap %d", MapNo:get())
-		end)
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_A02554634B6C75B4B65022A3C3C5C24D",
+				BP_MIAGameInstance_C__OnSuccess_A025)
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
