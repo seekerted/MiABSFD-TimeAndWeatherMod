@@ -52,7 +52,7 @@ local function SetTimeSegmentTransitionTime()
 	local BP_MapEnvironment_C = StaticFindObject("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.Default__BP_MapEnvironment_C")
 
 	if not BP_MapEnvironment_C:IsValid() then
-		Utils.Log("Default__BP_MapEnvironment_C is not valid.")
+		Utils.Log("BP_MapEnvironment_C is not valid.")
 		return
 	end
 
@@ -67,7 +67,7 @@ local function LoadSaveDataFromSlot(Index)
 	Save.SlotIndex = Index
 	Save.LocalTime = tonumber(Config.Read(Index .. "-LocalTime"))
 
-	if Save.LocalTime == nil then
+	if not Save.LocalTime then
 		Save.LocalTime = GetLocalTimeFromOSDate(os.date("*t"))
 		Utils.Log("No Local Time entry. Setting to %d", Save.LocalTime)
 	end
@@ -94,6 +94,11 @@ end
 -- time dilation. Time dilation is only affected when ascending to a map of lower depth, and is computed by how much
 -- was ascended (including fast travel).
 local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return 0
+	end
+
 	local GameStateBase = FindFirstOf("GameStateBase")
 	if not GameStateBase:IsValid() then
 		Utils.Log("GameStateBase is not valid.")
@@ -108,7 +113,7 @@ local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
 		return 0
 	end
 
-	if Save.PrevMapNo == nil then
+	if not Save.PrevMapNo then
 		Utils.Log("Save.PrevMapNo is nil.")
 		Save.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 		return 0
