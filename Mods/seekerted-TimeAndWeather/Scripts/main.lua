@@ -165,42 +165,14 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData", WBP_SaveLayout_C__LoadData)
 
-		RegisterConsoleCommandHandler("sat", function(FullCommand, Parameters, OutputDevice)
-			New_MIAGameInstance.SetAbyssTime(Parameters[1], Parameters[2])
-			return true
-		end)
-
-		RegisterConsoleCommandHandler("aat", function(FullCommand, Parameters, OutputDevice)
-			local GetAbyssTimeOutParams = {}
-			New_MIAGameInstance.GetAbyssTime(GetAbyssTimeOutParams, {})
-			Utils.Log("Current Abyss Time: %02d:%02d", GetAbyssTimeOutParams.Hour, GetAbyssTimeOutParams.Minute)
-			Utils.Log("Adding Abyss Time of %02d:%02d", Parameters[1], Parameters[2])
-			New_MIAGameInstance.AddAbyssTime(Parameters[1], Parameters[2])
-			New_MIAGameInstance.GetAbyssTime(GetAbyssTimeOutParams, {})
-			Utils.Log("New Abyss Time: %02d:%02d", GetAbyssTimeOutParams.Hour, GetAbyssTimeOutParams.Minute)
-			Utils.Log("===")
-			return true
-		end)
-
-		RegisterConsoleCommandHandler("tts", function(FullCommand, Parameters, OutputDevice)
-			local mapenv = FindFirstOf("BP_MapEnvironment_C")
-
-			mapenv.ChangeTimeSegment(Parameters[0])
-			Utils.Log("tts")
-
-			return true
-		end)
-
-		Utils.RegisterHookOnce("/Script/MadeInAbyss.MIAGameInstance:SetAbyssTime", function(self, h, m)
-			Utils.Log("SetAbyssTime %d %d", h:get(), m:get())
-		end)
-
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel", BP_MIAGameInstance_C__ChangeLevel)
 
 		SetTimeSegmentTransitionTime()
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_A02554634B6C75B4B65022A3C3C5C24D",
 				BP_MIAGameInstance_C__OnSuccess_A025)
+		
+		require("dev")
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
