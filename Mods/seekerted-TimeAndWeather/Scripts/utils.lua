@@ -4,7 +4,7 @@ local RegisteredHooks = {}
 
 Utils.ModName = "TimeAndWeather"
 Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.2.0"
+Utils.ModVer = "0.2.1"
 
 function Utils.Log(Format, ...)
 	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, string.format(Format, ...)))
@@ -26,6 +26,25 @@ function Utils.TestFunc(FunctionName)
 		end
 
 		Utils.Log("CALLED: %s %s", FunctionName, Args)
+	end)
+end
+
+-- Wraps around RegisterConsoleCommandHandler. To provide better context on which command said which log.
+-- Callback function takes in parameters: (FullCommand, Parameters, Log) and return true/false regarding its success status.
+-- Code inside the callback function must use Log() for logging, not Utils.Log
+function Utils.RegisterCommand(CommandName, Callback)
+	RegisterConsoleCommandHandler("st" .. CommandName, function(FullCommand, Parameters, OutputDevice)
+		Utils.Log("> %s", FullCommand)
+
+		local function Log(Format, ...)
+			Utils.Log("[%s] %s", FullCommand, string.format(Format, ...))
+		end
+
+		local exitVal = Callback(FullCommand, Parameters, Log)
+
+		Log("End Command. Successful? %s", tostring(exitVal))
+
+		return true
 	end)
 end
 
