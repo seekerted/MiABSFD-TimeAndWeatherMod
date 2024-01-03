@@ -4,7 +4,7 @@ local RegisteredHooks = {}
 
 Utils.ModName = "TimeAndWeather"
 Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.2.1"
+Utils.ModVer = "0.3.1"
 
 function Utils.Log(Format, ...)
 	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, string.format(Format, ...)))
@@ -22,7 +22,7 @@ function Utils.TestFunc(FunctionName)
 	Utils.RegisterHookOnce(FunctionName, function(self, ...)
 		local Args = ""
 		for _, v in ipairs({...}) do
-			Args = Args .. v:get() .. " "
+			Args = string.format("%s[%s] ", Args, v:get())
 		end
 
 		Utils.Log("CALLED: %s %s", FunctionName, Args)
