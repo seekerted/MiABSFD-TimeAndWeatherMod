@@ -140,6 +140,36 @@ local function GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
 	return ElapsedTimeOnSurface
 end
 
+-- Update the background image in Belchero Image to match the current time.
+local function UpdateBelcheroBackground(WBP_EventBG_C)
+	local BP_MIAGameInstance_C = FindFirstOf("BP_MIAGameInstance_C")
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return
+	end
+
+	if BP_MIAGameInstance_C.PlayMapNo ~= 80 then
+		return
+	end
+
+	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
+	if not BP_MapEnvironment_C:IsValid() then
+		Utils.Log("BP_MapEnvironment_C is not valid.")
+		return
+	end
+
+	local NewColor = BP_MapEnvironment_C.EnvParamsCurrent.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6
+
+	if WBP_EventBG_C:IsValid() then
+		WBP_EventBG_C:SetColorAndOpacity({
+			R = NewColor.R,
+			G = NewColor.G,
+			B = NewColor.B,
+			A = NewColor.A,
+		})
+	end
+end
+
 local function UpdateElapsedTimeInMapOnChangeLevel(BP_MIAGameInstance_C)
 	ElapsedTimeInMap = GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
 end
@@ -158,6 +188,10 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	UpdateElapsedTimeInMapOnChangeLevel(Param_BP_MIAGameInstance_C:get())
 end
 
+local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
+	UpdateBelcheroBackground(Param_WBP_EventBG_C:get())
+end
+
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
 local function HookMIAGameInstance(New_MIAGameInstance)
 	if New_MIAGameInstance:IsValid() then
@@ -171,6 +205,9 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_A02554634B6C75B4B65022A3C3C5C24D",
 				BP_MIAGameInstance_C__OnSuccess_A025)
+
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
+				WBP_EventBG_C__OnLoaded_6C51)
 		
 		require("dev")
 	else
