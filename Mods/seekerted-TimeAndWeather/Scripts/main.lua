@@ -142,22 +142,13 @@ end
 
 -- Update the background image in Belchero Image to match the current time.
 local function UpdateBelcheroBackground(WBP_EventBG_C)
-	local BP_MIAGameInstance_C = FindFirstOf("BP_MIAGameInstance_C")
-	if not BP_MIAGameInstance_C:IsValid() then
-		Utils.Log("BP_MIAGameInstance_C is not valid.")
-		return
-	end
-
-	if BP_MIAGameInstance_C.PlayMapNo ~= 80 then
-		return
-	end
-
 	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
 	if not BP_MapEnvironment_C:IsValid() then
 		Utils.Log("BP_MapEnvironment_C is not valid.")
 		return
 	end
 
+	-- Simply copy the sun light color of the current map setting and apply it to the rgba of the background image.
 	local NewColor = BP_MapEnvironment_C.EnvParamsCurrent.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6
 
 	if WBP_EventBG_C:IsValid() then
