@@ -14,10 +14,23 @@ local Save = {
 }
 
 local ElapsedTimeInMap = nil
-local PreviousTimeSegment = nil
+local PreviousAbyssTime = {}
 
 local MINS_IN_HOUR = 60
 local MINS_IN_DAY = MINS_IN_HOUR * 24
+
+local MAP_NO = {
+	ORTH = 60,
+	NETHERWORLD_GATE = 1,
+}
+
+-- RGBA colors for the Orth visuals. Taken from Netherworld Gate's sunlight colors.
+local ORTH_TIME_SEGMENT = {
+	{R = 0.85, G = 0.8, B = 0.7, A = 1},
+	{R = 1, G = 1, B = 1, A = 1},
+	{R = 0.8, G = 0.5, B = 0.2, A = 1},
+	{R = 0.05, G = 0.1, B = 0.25, A = 1},
+}
 
 -- 1 minute (or 1 second of IRL game time) in these layers = n minutes Surface Time
 local TIME_DILATION = {
@@ -27,6 +40,24 @@ local TIME_DILATION = {
 	[4] = 4,
 	[5] = 6,
 }
+
+-- 1 Morning [4-6)
+-- 2 Daytime [6-19)
+-- 3 Evening [19-20)
+-- 4 Night [20-4)
+local function GetTimeSegmentNoFromHour(Hour)
+	if Hour < 4 then
+		return 4
+	elseif Hour < 6 then
+		return 1
+	elseif Hour < 19 then
+		return 2
+	elseif Hour < 20 then
+		return 3
+	else
+		return 4
+	end
+end
 
 -- Set Surface Time while constraining it to one week.
 local function SetSurfaceTime(NewSurfaceTime)
@@ -161,10 +192,62 @@ local function UpdateBelcheroBackground(WBP_EventBG_C)
 	end
 end
 
-local function UpdateElapsedTimeInMapOnChangeLevel(BP_MIAGameInstance_C)
-	ElapsedTimeInMap = GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
+-- Update the background visuals in Orth to match the current time.
+local function UpdateOrthBackground(BP_MIAGameInstance_C)
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return
+	end
+
+	if BP_MIAGameInstance_C.PlayMapNo ~= MAP_NO.ORTH then
+		return
+	end
+
+	local WBP_EvPic3006_C = FindFirstOf("WBP_EvPic3006_C")
+	if not WBP_EvPic3006_C:IsValid() then
+		Utils.Log("WBP_EvPic3006_C is not valid")
+		return
+	end
+
+	local GetAbyssTimeOutParams = {}
+	BP_MIAGameInstance_C.GetAbyssTime(GetAbyssTimeOutParams, {})
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(GetAbyssTimeOutParams.Hour)
+
+	WBP_EvPic3006_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
+local function UpdateElapsedTimeInMapOnChangeLevel(BP_MIAGameInstance_C)
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return
+	end
+
+	ElapsedTimeInMap = GetElapsedLocalTimeOnMapChange(BP_MIAGameInstance_C)
+
+	-- In case the Abyss Time was overriden by the game, set it back to our local copy of the Abyss Time before this function
+	-- was called.
+	BP_MIAGameInstance_C.SetAbyssTime(PreviousAbyssTime.Hour, PreviousAbyssTime.Minute)
+end
+
+-- Save a copy of the Abyss Time. Sometimes, the game itself sets the Abyss Time. We use this to prevent that from happening
+-- by having our own copy of Abyss Time, and we use this to set it back.
+local function PreserveAbyssTime()
+	local BP_MIAGameInstance_C = FindFirstOf("BP_MIAGameInstance_C")
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C is not valid.")
+		return
+	end
+
+	BP_MIAGameInstance_C:GetAbyssTime(PreviousAbyssTime, {})
+end
+
+-- Called after a map change (before the fade out)
+local function BP_MIAGameInstance_C__OnSuccess_884D(Param_BP_MIAGameInstance_C)
+	UpdateOrthBackground(Param_BP_MIAGameInstance_C:get())
+end
+
+-- Called after a map change (a bit after the fade out)
 local function BP_MIAGameInstance_C__OnSuccess_A025(Param_BP_MIAGameInstance_C)
 	AddElapsedTimeToAbyssTime(Param_BP_MIAGameInstance_C:get(), ElapsedTimeInMap)
 end
@@ -174,13 +257,20 @@ local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
 	LoadSaveDataFromSlot(Param_Index:get())
 end
 
--- Called just before the map changes, so we can still get the variables from the current map.
+-- Called as soon as the process of changing maps begin (or very early on)
 local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
 	UpdateElapsedTimeInMapOnChangeLevel(Param_BP_MIAGameInstance_C:get())
 end
 
+-- Called when the background image in Belchero is loaded (just before the fade out happens)
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
 	UpdateBelcheroBackground(Param_WBP_EventBG_C:get())
+end
+
+-- Called every time the player steps on the yellow circle that changes maps
+local function BP_GM_MapChange_C__CanInteraction(Param_BP_GM_MapChange_C)
+	PreserveAbyssTime()
+	return true -- TODO: Do not override CanInteraction's return value
 end
 
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
@@ -199,7 +289,13 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
 				WBP_EventBG_C__OnLoaded_6C51)
-		
+
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Placeables/Gimmicks/BP_GM_MapChange.BP_GM_MapChange_C:CanInteraction",
+				BP_GM_MapChange_C__CanInteraction)
+
+		Utils.RegisterHookOnce("Function /Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_884DEFA44E0E3C73A1DE44B096F9A105",
+				BP_MIAGameInstance_C__OnSuccess_884D)
+
 		require("dev")
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
