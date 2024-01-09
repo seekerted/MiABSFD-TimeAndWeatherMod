@@ -193,21 +193,27 @@ local function UpdateBelcheroBackground(WBP_EventBG_C)
 end
 
 -- Update the background visuals in Orth to match the current time.
-local function UpdateOrthBackground(BP_MIAGameInstance_C)
-	if not BP_MIAGameInstance_C:IsValid() then
-		Utils.Log("BP_MIAGameInstance_C is not valid.")
-		return
-	end
+local function UpdateOrthBackground(New_MIAEventPictureWidget)
+	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
 
-	if BP_MIAGameInstance_C.PlayMapNo ~= MAP_NO.ORTH then
-		return
-	end
+	if not New_MIAEventPictureWidget:IsValid() or not New_MIAEventPictureWidget:GetOuter():IsValid() or not New_MIAEventPictureWidget:GetOuter():GetOuter():IsValid()
+			then return end
 
-	local WBP_EvPic3006_C = FindFirstOf("WBP_EvPic3006_C")
-	if not WBP_EvPic3006_C:IsValid() then
-		Utils.Log("WBP_EvPic3006_C is not valid")
-		return
-	end
+	-- Grab the current instance of WBP_StageSelectOrth_C, and verify if the MIAEventPictureWidget grand-outer is that.
+	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
+	if not WBP_StageSelectOrth_C:IsValid() then return end
+
+	if New_MIAEventPictureWidget:GetOuter():GetOuter():GetFName():ToString() ~= WBP_StageSelectOrth_C:GetFName():ToString()
+			then return end
+
+	-- Check that we are on the Orth map.
+	local BP_MIAGameInstance_C = FindFirstOf("BP_MIAGameInstance_C")
+	if not BP_MIAGameInstance_C:IsValid() then return end
+
+	if BP_MIAGameInstance_C.PlayMapNo ~= MAP_NO.ORTH then return end
+
+	-- At this point, we've established that New_MIAEventPictureWidget == WBP_EvPic3006_C.
+	local WBP_EvPic3006_C = New_MIAEventPictureWidget
 
 	local GetAbyssTimeOutParams = {}
 	BP_MIAGameInstance_C.GetAbyssTime(GetAbyssTimeOutParams, {})
@@ -240,11 +246,6 @@ local function PreserveAbyssTime()
 	end
 
 	BP_MIAGameInstance_C:GetAbyssTime(PreviousAbyssTime, {})
-end
-
--- Called after a map change (before the fade out)
-local function BP_MIAGameInstance_C__OnSuccess_884D(Param_BP_MIAGameInstance_C)
-	UpdateOrthBackground(Param_BP_MIAGameInstance_C:get())
 end
 
 -- Called after a map change (a bit after the fade out)
@@ -293,12 +294,15 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Placeables/Gimmicks/BP_GM_MapChange.BP_GM_MapChange_C:CanInteraction",
 				BP_GM_MapChange_C__CanInteraction)
 
-		Utils.RegisterHookOnce("Function /Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_884DEFA44E0E3C73A1DE44B096F9A105",
-				BP_MIAGameInstance_C__OnSuccess_884D)
-
 		require("dev")
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
 end
 HookMIAGameInstance(FindFirstOf("MIAGameInstance"))
+
+-- Hook into new instances of MIAEventPictureWidget
+local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
+	UpdateOrthBackground(New_MIAEventPictureWidget)
+end
+NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
