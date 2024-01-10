@@ -8,6 +8,20 @@ Utils.Log(_VERSION)
 local MINS_IN_HOUR = 60
 local HOURS_IN_DAY = 24
 
+---On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
+---layer is 6 seconds in the first layer.
+---@enum (LayerNo) TimeSpeed
+local TIME_SPEED_PER_LAYER = {
+	[1] = 1,
+	[2] = 2,
+	[3] = 3,
+	[4] = 4,
+	[5] = 6,
+}
+
+---@class (exact) SaveSession
+---@field PlayerTime PlayerTime
+---@field PrevMapNo number?
 local SaveSession = {
 	---The Minute component is not an integer as delta values will be added to it.
 	---@class (exact) PlayerTime
@@ -16,7 +30,8 @@ local SaveSession = {
 	PlayerTime = {
 		Hour = 0,
 		Minute = 0,
-	}
+	},
+	PrevMapNo = nil,
 }
 
 ---Gets the hour and min properties of the DateTime table and returns it as a table with {Hour, Minute}
@@ -46,6 +61,57 @@ local function AddDeltaToPlayerTime(Delta, PlayerTime)
 	end
 end
 
+---Returns how long in IRL seconds the player spent on the current map
+---@return number #GameStateBase.ReplicatedWorldTimeSeconds (0 if GameStateBase was invalid)
+local function GetTimeElapsedInMap()
+	local GameStateBase = FindFirstOf("GameStateBase")
+	if not GameStateBase:IsValid() then
+		Utils.Log("Couldn't get time elapsed in map as GameStateBase was invalid")
+		return 0
+	end
+
+	return GameStateBase.ReplicatedWorldTimeSeconds
+end
+
+---Returns time dilation factor, based on the depth difference of the two maps from PrevMapNo to
+---BP_MIAGameInstance_C.PlayMapNo
+---@param PrevMapNo integer
+---@param BP_MIAGameInstance_C UBP_MIAGameInstance_C
+---@return number
+local function GetTimeDilation(PrevMapNo, BP_MIAGameInstance_C)
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("Could not get time dilation as BP_MIAGameInstance_C is invalid. Returning 1")
+		return 1
+	end
+
+	local MIADatabaseFunctionLibrary = StaticFindObject("/Script/MadeInAbyss.Default__MIADatabaseFunctionLibrary")
+	if not MIADatabaseFunctionLibrary:IsValid() then
+		Utils.Log("Could not get time dilation as MIADatabaseFunctionLibrary is invalid. Returning 1")
+		return 1
+	end
+
+	if not PrevMapNo then
+		Utils.Log("Could not get time dilation as PrevMapNo is nil. Returning 1")
+		return 1
+	end
+
+	-- ChangeLevel doesn't fire when changing between submaps/levels anyway, so just set the sub ID to 0.
+	local PrevMapInfo = MIADatabaseFunctionLibrary.GetMIAMapInfomation(PrevMapNo, 0)
+	local NextMapInfo = MIADatabaseFunctionLibrary.GetMIAMapInfomation(BP_MIAGameInstance_C.PlayMapNo, 0)
+
+	local TimeDilation = 1
+
+	if PrevMapInfo.Depth > NextMapInfo.Depth then
+		TimeDilation = (PrevMapInfo.Depth - NextMapInfo.Depth) / 1000 + TIME_SPEED_PER_LAYER[PrevMapInfo.Floor]
+	end
+
+	Utils.Log("Time dilation from %s (MapNo: %d, Layer: %d, Depth: %dm) -> %s (MapNo: %d, Layer: %d, Depth: %dm) is %.2fx",
+			PrevMapInfo.Name:ToString(), PrevMapInfo.ID, PrevMapInfo.Floor, PrevMapInfo.Depth,
+			NextMapInfo.Name:ToString(), NextMapInfo.ID, NextMapInfo.Floor, NextMapInfo.Depth, TimeDilation)
+
+	return TimeDilation
+end
+
 ---Called when player selects a save slot to load 
 ---@param Param_WBP_SaveLayout_C RemoteObject
 ---@param Param_Index RemoteObject 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
@@ -57,13 +123,23 @@ end
 ---@param Param_BP_MIAGameInstance_C RemoteObject
 ---@param Param_MapNo RemoteObject Map number of the next map
 local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
+	local BP_MIAGameInstance_C = Param_BP_MIAGameInstance_C:get()
+	if not BP_MIAGameInstance_C:IsValid() then
+		Utils.Log("BP_MIAGameInstance_C was invalid on BP_MIAGameInstance_C:ChangeLevel")
+		return
+	end
+
+	local TimeElapsedInMap = GetTimeElapsedInMap()
+	local TimeDilation = GetTimeDilation(SaveSession.PrevMapNo, BP_MIAGameInstance_C)
+	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
+
+	Utils.Log("Time spent: %f", TimeElapsedInMap)
 end
 
 ---@param Param_BP_AbyssPlayerController_C RemoteObject 
 ---@param Param_DeltaSeconds RemoteObject
 local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerController_C, Param_DeltaSeconds)
 	AddDeltaToPlayerTime(Param_DeltaSeconds:get(), SaveSession.PlayerTime)
-	Utils.PrintTable(SaveSession.PlayerTime)
 end
 
 ---Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
@@ -85,12 +161,11 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 end
 HookMIAGameInstance(FindFirstOf("BP_MIAGameInstance_C"))
 
----@param New_BP_AbyssPlayerController_C ABP_AbyssPlayerController_C
-local function HookBP_AbyssPlayerController_C(New_BP_AbyssPlayerController_C)
+---@param New_MIAPlayerController AMIAPlayerController
+local function HookMIAPlayerController(New_MIAPlayerController)
 	-- Only use this function to hook into the player controller's ReceiveTick
 	Utils.RegisterHookOnce(
 			"/Game/MadeInAbyss/Core/GameModes/BP_AbyssPlayerController.BP_AbyssPlayerController_C:ReceiveTick",
 			BP_AbyssPlayerController_C__ReceiveTick)
 end
-NotifyOnNewObject("/Game/MadeInAbyss/Core/GameModes/BP_AbyssPlayerController.BP_AbyssPlayerController_C",
-		HookBP_AbyssPlayerController_C)
+NotifyOnNewObject("/Script/MadeInAbyss.MIAPlayerController", HookMIAPlayerController)

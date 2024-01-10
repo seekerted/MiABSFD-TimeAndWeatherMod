@@ -8,7 +8,7 @@ Utils.ModVer = "0.3.4"
 
 ---Prints to console in the format of [<author>-<mod>] <message> in a new line.
 ---@param Format string
----@param ... string?
+---@param ... (string | number)?
 function Utils.Log(Format, ...)
 	print(string.format("[%s-%s] %s\n", Utils.ModAuthor, Utils.ModName, string.format(Format, ...)))
 end
