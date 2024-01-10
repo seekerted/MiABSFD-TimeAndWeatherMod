@@ -1,3 +1,6 @@
+---@alias float number
+---@alias int32 integer
+
 local Utils = require("utils")
 local Config = require("config")
 
@@ -64,6 +67,7 @@ end
 ---Returns how long in IRL seconds the player spent on the current map
 ---@return number #GameStateBase.ReplicatedWorldTimeSeconds (0 if GameStateBase was invalid)
 local function GetTimeElapsedInMap()
+	---@type AGameStateBase
 	local GameStateBase = FindFirstOf("GameStateBase")
 	if not GameStateBase:IsValid() then
 		Utils.Log("Couldn't get time elapsed in map as GameStateBase was invalid")
@@ -73,31 +77,25 @@ local function GetTimeElapsedInMap()
 	return GameStateBase.ReplicatedWorldTimeSeconds
 end
 
----Returns time dilation factor, based on the depth difference of the two maps from PrevMapNo to
----BP_MIAGameInstance_C.PlayMapNo
+---Returns time dilation factor, based on the depth difference of the two maps from PrevMapNo to CurrentMapNo
 ---@param PrevMapNo integer
----@param BP_MIAGameInstance_C UBP_MIAGameInstance_C
+---@param CurrentMapNo integer
 ---@return number
-local function GetTimeDilation(PrevMapNo, BP_MIAGameInstance_C)
-	if not BP_MIAGameInstance_C:IsValid() then
-		Utils.Log("Could not get time dilation as BP_MIAGameInstance_C is invalid. Returning 1")
-		return 1
-	end
-
+local function GetTimeDilation(PrevMapNo, CurrentMapNo)
 	local MIADatabaseFunctionLibrary = StaticFindObject("/Script/MadeInAbyss.Default__MIADatabaseFunctionLibrary")
 	if not MIADatabaseFunctionLibrary:IsValid() then
 		Utils.Log("Could not get time dilation as MIADatabaseFunctionLibrary is invalid. Returning 1")
 		return 1
 	end
 
-	if not PrevMapNo then
-		Utils.Log("Could not get time dilation as PrevMapNo is nil. Returning 1")
+	if not PrevMapNo or not CurrentMapNo then
+		Utils.Log("Could not get time dilation as either PrevMapNo or CurrentMapNo are nil. Returning 1")
 		return 1
 	end
 
 	-- ChangeLevel doesn't fire when changing between submaps/levels anyway, so just set the sub ID to 0.
 	local PrevMapInfo = MIADatabaseFunctionLibrary.GetMIAMapInfomation(PrevMapNo, 0)
-	local NextMapInfo = MIADatabaseFunctionLibrary.GetMIAMapInfomation(BP_MIAGameInstance_C.PlayMapNo, 0)
+	local NextMapInfo = MIADatabaseFunctionLibrary.GetMIAMapInfomation(CurrentMapNo, 0)
 
 	local TimeDilation = 1
 
@@ -123,6 +121,7 @@ end
 ---@param Param_BP_MIAGameInstance_C RemoteObject
 ---@param Param_MapNo RemoteObject Map number of the next map
 local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
+	---@type UBP_MIAGameInstance_C
 	local BP_MIAGameInstance_C = Param_BP_MIAGameInstance_C:get()
 	if not BP_MIAGameInstance_C:IsValid() then
 		Utils.Log("BP_MIAGameInstance_C was invalid on BP_MIAGameInstance_C:ChangeLevel")
@@ -130,7 +129,7 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	end
 
 	local TimeElapsedInMap = GetTimeElapsedInMap()
-	local TimeDilation = GetTimeDilation(SaveSession.PrevMapNo, BP_MIAGameInstance_C)
+	local TimeDilation = GetTimeDilation(SaveSession.PrevMapNo, BP_MIAGameInstance_C.PlayMapNo)
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 
 	Utils.Log("Time spent: %f", TimeElapsedInMap)
