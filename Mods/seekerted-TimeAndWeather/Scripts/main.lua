@@ -175,3 +175,12 @@ local function HookMIAPlayerController(New_MIAPlayerController)
 	end
 end
 HookMIAPlayerController(FindFirstOf("BP_AbyssPlayerController_C"))
+
+Utils.RegisterCommand("spt", function(FullCommand, Parameters, Log)
+	Log("Manually setting PlayerTime")
+
+	SaveSession.PlayerTime.Hour = Parameters[1]
+	SaveSession.PlayerTime.Minute = Parameters[2]
+
+	return true
+end)
