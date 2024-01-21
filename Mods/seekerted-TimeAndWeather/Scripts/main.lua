@@ -25,24 +25,8 @@ local SaveSession = {
 		Minute = 0,
 	},
 	PrevMapNo = nil,
-	CurrentTimeSegment = nil,
 	GI = nil,
 }
-
--- 1 Morning [4-6); 2 Daytime [6-19); 3 Evening [19-20); 4 Night [20-4)
-local function GetCorrectTimeSegment(Hour)
-	if Hour < 4 then
-		return 4
-	elseif Hour < 6 then
-		return 1
-	elseif Hour < 19 then
-		return 2
-	elseif Hour < 20 then
-		return 3
-	else
-		return 4
-	end
-end
 
 -- Gets the hour and min properties of the DateTime table and returns it as a table with {Hour, Minute}
 local function GetPlayerTimeFromOsDate(DateTime)
@@ -54,17 +38,19 @@ end
 
 -- Adds Delta to PlayerTime (into its minutes component). Clamps the Hour and Minute values to [0-24) and [0-60) and
 -- adjusts accordingly when it exceeds.
-local function AddDeltaToPlayerTime(Delta, PlayerTime)
+local function AddDeltaToPlayerTime(Delta, PlayerTime, OutParam)
 	if not Delta then return end
 
 	PlayerTime.Minute = PlayerTime.Minute + Delta
 
 	if PlayerTime.Minute >= MINS_IN_HOUR then
+		OutParam.IsHourChanged = true
 		PlayerTime.Hour = PlayerTime.Hour + math.floor(PlayerTime.Minute / MINS_IN_HOUR)
 		PlayerTime.Minute = PlayerTime.Minute % MINS_IN_HOUR
 	end
 
 	if PlayerTime.Hour >= HOURS_IN_DAY then
+		OutParam.IsHourChanged = true
 		PlayerTime.Hour = PlayerTime.Hour % HOURS_IN_DAY
 	end
 end
@@ -117,11 +103,10 @@ end
 -- Called when player selects a save slot to load 
 -- 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
 local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
-	-- Set the PlayerTime from OS time, and set the CurrentTimeSegment given the hour.
+	-- Set the PlayerTime from OS time
 	SaveSession.PlayerTime = GetPlayerTimeFromOsDate(os.date("*t"))
-	SaveSession.CurrentTimeSegment = GetCorrectTimeSegment(SaveSession.PlayerTime.Hour)
 
-	Utils.Log("Loading Data (%02d:%02.0f, %d)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute, SaveSession.CurrentTimeSegment)
+	Utils.Log("Loading OS Time of %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 end
 
 -- Called on the fade out into darkness on change map, or even any time the map is about the change (also called on Save
@@ -149,16 +134,12 @@ end
 
 -- Called on every tick of the Player Controller. Do NOT put anything too heavy in here, even Find*()
 local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerController_C, Param_DeltaSeconds)
-	AddDeltaToPlayerTime(Param_DeltaSeconds:get(), SaveSession.PlayerTime)
+	local Info = {}
+	AddDeltaToPlayerTime(Param_DeltaSeconds:get(), SaveSession.PlayerTime, Info)
 
-	-- If the current time segment is not aligned with the correct time segment (based on the hour), change the time
-	-- segment to the correct one.
-	local CorrectTimeSegment = GetCorrectTimeSegment(SaveSession.PlayerTime.Hour)
-	if CorrectTimeSegment ~= SaveSession.CurrentTimeSegment then
-		Utils.Log("It is now %02d:%02.0f. Changing time segment: %d -> %d", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute,
-				SaveSession.CurrentTimeSegment, CorrectTimeSegment)
-
-		SaveSession.CurrentTimeSegment = CorrectTimeSegment
+	-- Update time segment when the hour changes
+	if Info and Info.IsHourChanged then
+		Utils.Log("Hour has changed (%02d:%02.0f)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 		ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 	end
 end
