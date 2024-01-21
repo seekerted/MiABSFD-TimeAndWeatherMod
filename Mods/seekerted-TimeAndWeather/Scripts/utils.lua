@@ -4,7 +4,7 @@ local RegisteredHooks = {}
 
 Utils.ModName = "TimeAndWeather"
 Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.3.5"
+Utils.ModVer = "0.3.6"
 
 -- Prints to console in the format of [<author>-<mod>] <message> in a new line.
 function Utils.Log(Format, ...)

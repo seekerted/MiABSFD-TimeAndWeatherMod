@@ -9,8 +9,9 @@ local MINS_IN_HOUR = 60
 local HOURS_IN_DAY = 24
 
 local MAP_NO = {
-	ORTH = 60,
 	NETHERWORLD_GATE = 1,
+	ORTH = 60,
+	BELCHERO = 80,
 }
 
 -- RGBA colors for the Orth visuals. Taken from Netherworld Gate's sunlight colors.
@@ -131,6 +132,32 @@ local function ChangeGameTimeSegmentByHour(Hour)
 	SaveSession.GI:SetAbyssTime(Hour, 0)
 end
 
+local function UpdateBelcheroBackground(New_MIAEventPictureWidget)
+	-- Check if the MIAEventPictureWidget is the right one we are looking for.
+	local WBP_EVENTBG_C = "WBP_EventBG_C_"
+
+	if New_MIAEventPictureWidget:GetFName():ToString():sub(1, #WBP_EVENTBG_C) ~= WBP_EVENTBG_C or SaveSession.GI.PlayMapNo ~=
+			MAP_NO.BELCHERO then return end
+
+	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
+	if not BP_MapEnvironment_C:IsValid() or not BP_MapEnvironment_C.EnvParamsCurrent:IsValid() then
+		Utils.Log("BP_MapEnvironment_C is not valid.")
+		return
+	end
+
+	local WBP_EventBG_C = New_MIAEventPictureWidget
+
+	-- Simply copy the sun light color of the current map setting and apply it to the rgba of the background image.
+	local NewColor = BP_MapEnvironment_C.EnvParamsCurrent.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6
+
+	WBP_EventBG_C:SetColorAndOpacity({
+		R = NewColor.R,
+		G = NewColor.G,
+		B = NewColor.B,
+		A = NewColor.A,
+	})
+end
+
 -- Update the background visuals in Orth to match the current time.
 local function UpdateOrthBackground(New_MIAEventPictureWidget)
 	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
@@ -154,6 +181,12 @@ local function UpdateOrthBackground(New_MIAEventPictureWidget)
 	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
 
 	WBP_EvPic3006_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+end
+
+-- Called just before the fade out onto the new map.
+local function BP_MIAGameInstance_C__OnSuccess_084D(Param_BP_MIAGameInstance_C)
+	-- Update time segment (instantly instead of transition)
+	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 end
 
 -- Called when player selects a save slot to load 
@@ -183,9 +216,6 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	Utils.Log("Current time: %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
-
-	-- Update time segment (instantly instead of transition)
-	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 end
 
 -- Called on every tick of the Player Controller. Do NOT put anything too heavy in here, even Find*()
@@ -212,6 +242,9 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel",
 				BP_MIAGameInstance_C__ChangeLevel)
 
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_084D74CC438019371E505798B67750BF",
+				BP_MIAGameInstance_C__OnSuccess_084D)
+
 		require("dev")
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
@@ -235,6 +268,7 @@ HookMIAPlayerController(FindFirstOf("BP_AbyssPlayerController_C"))
 -- Hook into new instances of MIAEventPictureWidget
 local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
 	UpdateOrthBackground(New_MIAEventPictureWidget)
+	UpdateBelcheroBackground(New_MIAEventPictureWidget)
 end
 NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
 
