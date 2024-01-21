@@ -239,10 +239,17 @@ end
 NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
 
 Utils.RegisterCommand("spt", function(FullCommand, Parameters, Log)
+	local NewHour = tonumber(Parameters[1])
+
+	if not NewHour then
+		Log("Failed to manually set PlayerTime")
+		return false
+	end
+
 	Log("Manually setting PlayerTime")
 
-	SaveSession.PlayerTime.Hour = Parameters[1]
-	SaveSession.PlayerTime.Minute = Parameters[2]
+	SaveSession.PlayerTime.Hour = NewHour
+	SaveSession.PlayerTime.Minute = tonumber(Parameters[2]) or 0
 
 	return true
 end)
