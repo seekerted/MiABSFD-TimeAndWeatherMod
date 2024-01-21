@@ -121,7 +121,7 @@ local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
 	SaveSession.PlayerTime = GetPlayerTimeFromOsDate(os.date("*t"))
 	SaveSession.CurrentTimeSegment = GetCorrectTimeSegment(SaveSession.PlayerTime.Hour)
 
-	Utils.Log("Loading Data (%02d:%02.2f, %d)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute, SaveSession.CurrentTimeSegment)
+	Utils.Log("Loading Data (%02d:%02.0f, %d)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute, SaveSession.CurrentTimeSegment)
 end
 
 -- Called on the fade out into darkness on change map, or even any time the map is about the change (also called on Save
@@ -139,6 +139,8 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 		AddDeltaToPlayerTime(TimeDilationDelta, SaveSession.PlayerTime)
 	end
 
+	Utils.Log("Current time: %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
+
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 
 	-- Update time segment (instantly instead of transition)
@@ -153,7 +155,7 @@ local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerContr
 	-- segment to the correct one.
 	local CorrectTimeSegment = GetCorrectTimeSegment(SaveSession.PlayerTime.Hour)
 	if CorrectTimeSegment ~= SaveSession.CurrentTimeSegment then
-		Utils.Log("It is now %02d:%02.2f. Changing time segment: %d -> %d", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute,
+		Utils.Log("It is now %02d:%02.0f. Changing time segment: %d -> %d", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute,
 				SaveSession.CurrentTimeSegment, CorrectTimeSegment)
 
 		SaveSession.CurrentTimeSegment = CorrectTimeSegment
