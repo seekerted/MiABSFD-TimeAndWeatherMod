@@ -8,6 +8,19 @@ Utils.Log(_VERSION)
 local MINS_IN_HOUR = 60
 local HOURS_IN_DAY = 24
 
+local MAP_NO = {
+	ORTH = 60,
+	NETHERWORLD_GATE = 1,
+}
+
+-- RGBA colors for the Orth visuals. Taken from Netherworld Gate's sunlight colors.
+local ORTH_TIME_SEGMENT = {
+	{R = 0.85, G = 0.8, B = 0.7, A = 1},
+	{R = 1, G = 1, B = 1, A = 1},
+	{R = 0.8, G = 0.5, B = 0.2, A = 1},
+	{R = 0.05, G = 0.1, B = 0.25, A = 1},
+}
+
 -- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
 -- layer is 6 seconds in the first layer.
 local TIME_SPEED_PER_LAYER = {
@@ -17,6 +30,24 @@ local TIME_SPEED_PER_LAYER = {
 	[4] = 4,
 	[5] = 6,
 }
+
+-- 1 Morning [4-6)
+-- 2 Daytime [6-19)
+-- 3 Evening [19-20)
+-- 4 Night [20-4)
+local function GetTimeSegmentNoFromHour(Hour)
+	if Hour < 4 then
+		return 4
+	elseif Hour < 6 then
+		return 1
+	elseif Hour < 19 then
+		return 2
+	elseif Hour < 20 then
+		return 3
+	else
+		return 4
+	end
+end
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
@@ -100,6 +131,31 @@ local function ChangeGameTimeSegmentByHour(Hour)
 	SaveSession.GI:SetAbyssTime(Hour, 0)
 end
 
+-- Update the background visuals in Orth to match the current time.
+local function UpdateOrthBackground(New_MIAEventPictureWidget)
+	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
+
+	if not New_MIAEventPictureWidget:IsValid() or not New_MIAEventPictureWidget:GetOuter():IsValid() or not New_MIAEventPictureWidget:GetOuter():GetOuter():IsValid()
+			then return end
+
+	-- Grab the current instance of WBP_StageSelectOrth_C, and verify if the MIAEventPictureWidget grand-outer is that.
+	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
+	if not WBP_StageSelectOrth_C:IsValid() then return end
+
+	if New_MIAEventPictureWidget:GetOuter():GetOuter():GetFName():ToString() ~= WBP_StageSelectOrth_C:GetFName():ToString()
+			then return end
+
+	-- Check that we are on the Orth map.
+	if SaveSession.GI.PlayMapNo ~= MAP_NO.ORTH then return end
+
+	-- At this point, we've established that New_MIAEventPictureWidget == WBP_EvPic3006_C.
+	local WBP_EvPic3006_C = New_MIAEventPictureWidget
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
+
+	WBP_EvPic3006_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+end
+
 -- Called when player selects a save slot to load 
 -- 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
 local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
@@ -175,6 +231,12 @@ local function HookMIAPlayerController(New_MIAPlayerController)
 	end
 end
 HookMIAPlayerController(FindFirstOf("BP_AbyssPlayerController_C"))
+
+-- Hook into new instances of MIAEventPictureWidget
+local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
+	UpdateOrthBackground(New_MIAEventPictureWidget)
+end
+NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
 
 Utils.RegisterCommand("spt", function(FullCommand, Parameters, Log)
 	Log("Manually setting PlayerTime")
