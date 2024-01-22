@@ -189,6 +189,21 @@ local function UpdateOrthBackground(New_MIAEventPictureWidget)
 	WBP_EvPic3006_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
+-- Also update the background of other Orth locations, like Relic Appraisal
+local function UpdateOrthSubBackground(WBP_EventBG_C)
+	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
+	if not WBP_StageSelectOrth_C:IsValid() then
+		Utils.Log("WBP_StageSelectOrth_C is not valid.")
+		return
+	end
+
+	if WBP_StageSelectOrth_C.OldBGIndex ~= ORTH_SUB_LOCATIONS.RELIC_APPRAISAL then return end
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
+
+	WBP_EventBG_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+end
+
 -- Called just before the fade out onto the new map.
 local function BP_MIAGameInstance_C__OnSuccess_084D(Param_BP_MIAGameInstance_C)
 	-- Update time segment (instantly instead of transition)
@@ -234,21 +249,6 @@ local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerContr
 		Utils.Log("Hour has changed (%02d:%02.0f)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 		ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 	end
-end
-
--- Also update the background of other Orth locations, like Relic Appraisal
-local function UpdateOrthSubBackground(WBP_EventBG_C)
-	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
-	if not WBP_StageSelectOrth_C:IsValid() then
-		Utils.Log("WBP_StageSelectOrth_C is not valid.")
-		return
-	end
-
-	if WBP_StageSelectOrth_C.OldBGIndex ~= ORTH_SUB_LOCATIONS.RELIC_APPRAISAL then return end
-
-	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
-
-	WBP_EventBG_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
