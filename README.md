@@ -34,7 +34,7 @@ This mod only affects gameplay, so your saves should be unaffected regardless if
 
 ### Uninstalling
 
-To disable just the mod but keep UE4SS, delete `Mods\seekerted-AbyssDeep\enabled.txt`. To re-enable the mod, just re-create it (it's an empty text file).
+To disable just the mod but keep UE4SS, delete `Mods\seekerted-TimeAndWeather\enabled.txt`. To re-enable the mod, just re-create it (it's an empty text file).
 
 To uninstall everything, simply revert the _executable folder_ back to the state before you pasted everything in (or just deleting `xinput1_3.dll` should suffice).
 
