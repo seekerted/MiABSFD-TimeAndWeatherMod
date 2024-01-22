@@ -1,5 +1,4 @@
 local Utils = require("utils")
-local Config = require("config")
 
 Utils.Log("Starting Time and Weather Mod by Ted the Seeker")
 Utils.Log(string.format("Version %s", Utils.ModVer))
