@@ -1,29 +1,9 @@
 local Utils = require("utils")
+local Consts = require("consts")
 
 Utils.Log("Starting Time and Weather Mod by Ted the Seeker")
 Utils.Log(string.format("Version %s", Utils.ModVer))
 Utils.Log(_VERSION)
-
-local MINS_IN_HOUR = 60
-local HOURS_IN_DAY = 24
-
-local MAP_NO = {
-	NETHERWORLD_GATE = 1,
-	ORTH = 60,
-	BELCHERO = 80,
-}
-
--- RGBA colors for the Orth visuals. Taken from Netherworld Gate's sunlight colors.
-local ORTH_TIME_SEGMENT = {
-	{R = 0.85, G = 0.8, B = 0.7, A = 1},
-	{R = 1, G = 1, B = 1, A = 1},
-	{R = 0.8, G = 0.5, B = 0.2, A = 1},
-	{R = 0.05, G = 0.1, B = 0.25, A = 1},
-}
-
-local ORTH_SUB_LOCATIONS = {
-	RELIC_APPRAISAL = 3,
-}
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
@@ -35,7 +15,6 @@ local SaveSession = {
 
 	-- Instances
 	GI = nil,
-	CDO_MapEnv = nil,
 }
 
 -- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
@@ -48,22 +27,17 @@ local TIME_SPEED_PER_LAYER = {
 	[5] = 6,
 }
 
--- Time Segment now depends on the BP_MapEnvironment_C TimeSegmentInfo values.
+-- Time Segment now depends on the consts values
 local function GetTimeSegmentNoFromHour(Hour)
-	local MorningBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4
-	local DaytimeBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.DaytimeBegin_6_7F3B82CD41CB381CB7FE53B883B8F3A9
-	local EveningBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E
-	local NightBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.NightBegin_10_41484B7E45F89103EACA158873AB0A63
-
 	Hour = Hour * 100
 
-	if Hour < MorningBegin then
+	if Hour < Consts.TIME_SEGMENT_BEGIN.MorningBegin then
 		return 4
-	elseif Hour < DaytimeBegin then
+	elseif Hour < Consts.TIME_SEGMENT_BEGIN.DaytimeBegin then
 		return 1
-	elseif Hour < EveningBegin then
+	elseif Hour < Consts.TIME_SEGMENT_BEGIN.EveningBegin then
 		return 2
-	elseif Hour < NightBegin then
+	elseif Hour < Consts.TIME_SEGMENT_BEGIN.NightBegin then
 		return 3
 	else
 		return 4
@@ -88,15 +62,15 @@ local function AddDeltaToPlayerTime(Delta, PlayerTime, OutParam)
 
 	PlayerTime.Minute = PlayerTime.Minute + Delta
 
-	if PlayerTime.Minute >= MINS_IN_HOUR then
+	if PlayerTime.Minute >= Consts.MINS_IN_HOUR then
 		OutParam.IsHourChanged = true
-		PlayerTime.Hour = PlayerTime.Hour + math.floor(PlayerTime.Minute / MINS_IN_HOUR)
-		PlayerTime.Minute = PlayerTime.Minute % MINS_IN_HOUR
+		PlayerTime.Hour = PlayerTime.Hour + math.floor(PlayerTime.Minute / Consts.MINS_IN_HOUR)
+		PlayerTime.Minute = PlayerTime.Minute % Consts.MINS_IN_HOUR
 	end
 
-	if PlayerTime.Hour >= HOURS_IN_DAY then
+	if PlayerTime.Hour >= Consts.HOURS_IN_DAY then
 		OutParam.IsHourChanged = true
-		PlayerTime.Hour = PlayerTime.Hour % HOURS_IN_DAY
+		PlayerTime.Hour = PlayerTime.Hour % Consts.HOURS_IN_DAY
 	end
 end
 
@@ -152,10 +126,11 @@ local function InitDefaultMapEnvironment()
 	-- Transition time in seconds
 	BP_MapEnvironment_C.TransitionTime = 60
 
-	-- Modify when each time segment starts
-	BP_MapEnvironment_C.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E = 1800
-
-	CDO_MapEnv = BP_MapEnvironment_C
+	-- Set the time segment begins from the consts
+	BP_MapEnvironment_C.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4 = Consts.TIME_SEGMENT_BEGIN.MorningBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.DaytimeBegin_6_7F3B82CD41CB381CB7FE53B883B8F3A9 = Consts.TIME_SEGMENT_BEGIN.DaytimeBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E = Consts.TIME_SEGMENT_BEGIN.EveningBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.NightBegin_10_41484B7E45F89103EACA158873AB0A63 = Consts.TIME_SEGMENT_BEGIN.NightBegin
 end
 
 local function ChangeGameTimeSegmentByHour(Hour)
@@ -164,10 +139,9 @@ end
 
 local function UpdateBelcheroBackground(New_MIAEventPictureWidget)
 	-- Check if we're in Belchero
-	if MAP_NO.BELCHERO ~= SaveSession.GI.PlayMapNo then return end
+	if not SaveSession.GI or Consts.MAP_NO.BELCHERO ~= SaveSession.GI.PlayMapNo then return end
 
 	-- Check if the MIAEventPictureWidget is the right one we are looking for.
-	
 	local WBP_EVENTBG_C = "WBP_EventBG_C"
 	if WBP_EVENTBG_C ~= New_MIAEventPictureWidget:GetClass():GetFName():ToString() or SaveSession.GI:GetFName():ToString() ~=
 			New_MIAEventPictureWidget:GetOuter():GetFName():ToString() then return end
@@ -194,7 +168,7 @@ end
 -- Update the background visuals in Orth to match the current time.
 local function UpdateOrthBackground(New_MIAEventPictureWidget)
 	-- Check that we are on the Orth map.
-	if SaveSession.GI.PlayMapNo ~= MAP_NO.ORTH then return end
+	if not SaveSession.GI or SaveSession.GI.PlayMapNo ~= Consts.MAP_NO.ORTH then return end
 
 	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
 
@@ -213,7 +187,7 @@ local function UpdateOrthBackground(New_MIAEventPictureWidget)
 
 	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
 
-	WBP_EvPic3006_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+	WBP_EvPic3006_C:SetColorAndOpacity(Consts.ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
 -- Also update the background of other Orth locations, like Relic Appraisal
@@ -224,11 +198,11 @@ local function UpdateOrthSubBackground(WBP_EventBG_C)
 		return
 	end
 
-	if WBP_StageSelectOrth_C.OldBGIndex ~= ORTH_SUB_LOCATIONS.RELIC_APPRAISAL then return end
+	if WBP_StageSelectOrth_C.OldBGIndex ~= Consts.ORTH_SUB_LOCATIONS.RELIC_APPRAISAL then return end
 
 	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
 
-	WBP_EventBG_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+	WBP_EventBG_C:SetColorAndOpacity(Consts.ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
 -- Called just before the fade out onto the new map.
@@ -278,7 +252,7 @@ local function TickPlayerTime(DeltaSeconds)
 end
 
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
-	if SaveSession.GI.PlayMapNo == MAP_NO.ORTH then
+	if SaveSession.GI.PlayMapNo == Consts.MAP_NO.ORTH then
 		UpdateOrthSubBackground(Param_WBP_EventBG_C:get())
 	end
 end
