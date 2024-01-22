@@ -133,11 +133,14 @@ local function ChangeGameTimeSegmentByHour(Hour)
 end
 
 local function UpdateBelcheroBackground(New_MIAEventPictureWidget)
-	-- Check if the MIAEventPictureWidget is the right one we are looking for.
-	local WBP_EVENTBG_C = "WBP_EventBG_C_"
+	-- Check if we're in Belchero
+	if MAP_NO.BELCHERO ~= SaveSession.GI.PlayMapNo then return end
 
-	if New_MIAEventPictureWidget:GetFName():ToString():sub(1, #WBP_EVENTBG_C) ~= WBP_EVENTBG_C or SaveSession.GI.PlayMapNo ~=
-			MAP_NO.BELCHERO then return end
+	-- Check if the MIAEventPictureWidget is the right one we are looking for.
+	
+	local WBP_EVENTBG_C = "WBP_EventBG_C"
+	if WBP_EVENTBG_C ~= New_MIAEventPictureWidget:GetClass():GetFName():ToString() or SaveSession.GI:GetFName():ToString() ~=
+			New_MIAEventPictureWidget:GetOuter():GetFName():ToString() then return end
 
 	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
 	if not BP_MapEnvironment_C:IsValid() or not BP_MapEnvironment_C.EnvParamsCurrent:IsValid() then
@@ -160,6 +163,9 @@ end
 
 -- Update the background visuals in Orth to match the current time.
 local function UpdateOrthBackground(New_MIAEventPictureWidget)
+	-- Check that we are on the Orth map.
+	if SaveSession.GI.PlayMapNo ~= MAP_NO.ORTH then return end
+
 	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
 
 	if not New_MIAEventPictureWidget:IsValid() or not New_MIAEventPictureWidget:GetOuter():IsValid() or not New_MIAEventPictureWidget:GetOuter():GetOuter():IsValid()
@@ -171,9 +177,6 @@ local function UpdateOrthBackground(New_MIAEventPictureWidget)
 
 	if New_MIAEventPictureWidget:GetOuter():GetOuter():GetFName():ToString() ~= WBP_StageSelectOrth_C:GetFName():ToString()
 			then return end
-
-	-- Check that we are on the Orth map.
-	if SaveSession.GI.PlayMapNo ~= MAP_NO.ORTH then return end
 
 	-- At this point, we've established that New_MIAEventPictureWidget == WBP_EvPic3006_C.
 	local WBP_EvPic3006_C = New_MIAEventPictureWidget
