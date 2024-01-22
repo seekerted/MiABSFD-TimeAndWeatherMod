@@ -22,6 +22,10 @@ local ORTH_TIME_SEGMENT = {
 	{R = 0.05, G = 0.1, B = 0.25, A = 1},
 }
 
+local ORTH_SUB_LOCATIONS = {
+	RELIC_APPRAISAL = 3,
+}
+
 -- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
 -- layer is 6 seconds in the first layer.
 local TIME_SPEED_PER_LAYER = {
@@ -233,6 +237,27 @@ local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerContr
 	end
 end
 
+-- Also update the background of other Orth locations, like Relic Appraisal
+local function UpdateOrthSubBackground(WBP_EventBG_C)
+	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
+	if not WBP_StageSelectOrth_C:IsValid() then
+		Utils.Log("WBP_StageSelectOrth_C is not valid.")
+		return
+	end
+
+	if WBP_StageSelectOrth_C.OldBGIndex ~= ORTH_SUB_LOCATIONS.RELIC_APPRAISAL then return end
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
+
+	WBP_EventBG_C:SetColorAndOpacity(ORTH_TIME_SEGMENT[TimeSegmentNo])
+end
+
+local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
+	if SaveSession.GI.PlayMapNo == MAP_NO.ORTH then
+		UpdateOrthSubBackground(Param_WBP_EventBG_C:get())
+	end
+end
+
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
 local function HookMIAGameInstance(New_MIAGameInstance)
 	if New_MIAGameInstance:IsValid() then
@@ -247,6 +272,9 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_084D74CC438019371E505798B67750BF",
 				BP_MIAGameInstance_C__OnSuccess_084D)
+
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
+				WBP_EventBG_C__OnLoaded_6C51)
 
 		require("dev")
 	else
