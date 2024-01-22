@@ -266,10 +266,9 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 end
 
--- Called on every tick of the Player Controller. Do NOT put anything too heavy in here, even Find*()
-local function BP_AbyssPlayerController_C__ReceiveTick(Param_BP_AbyssPlayerController_C, Param_DeltaSeconds)
+local function TickPlayerTime(DeltaSeconds)
 	local Info = {}
-	AddDeltaToPlayerTime(Param_DeltaSeconds:get(), SaveSession.PlayerTime, Info)
+	AddDeltaToPlayerTime(DeltaSeconds, SaveSession.PlayerTime, Info)
 
 	-- Update time segment when the hour changes
 	if Info and Info.IsHourChanged then
@@ -282,6 +281,11 @@ local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
 	if SaveSession.GI.PlayMapNo == MAP_NO.ORTH then
 		UpdateOrthSubBackground(Param_WBP_EventBG_C:get())
 	end
+end
+
+-- Called on every unpaused tick of gameplay.
+local function BP_MIAGameModeBase_C__ReceiveTick(Param_BP_MIAGameModeBase_C, Param_DeltaSeconds)
+	TickPlayerTime(Param_DeltaSeconds:get())
 end
 
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
@@ -309,25 +313,27 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 end
 HookMIAGameInstance(FindFirstOf("BP_MIAGameInstance_C"))
 
--- Hook into new instances of MIAPlayerController (hot-reload friendly)
-local function HookMIAPlayerController(New_MIAPlayerController)
-	if New_MIAPlayerController:IsValid() then
-		-- Hook into the player controller's ReceiveTick
-		Utils.RegisterHookOnce(
-				"/Game/MadeInAbyss/Core/GameModes/BP_AbyssPlayerController.BP_AbyssPlayerController_C:ReceiveTick",
-				BP_AbyssPlayerController_C__ReceiveTick)
-	else
-		NotifyOnNewObject("/Script/MadeInAbyss.MIAPlayerController", HookMIAPlayerController)
-	end
-end
-HookMIAPlayerController(FindFirstOf("BP_AbyssPlayerController_C"))
-
 -- Hook into new instances of MIAEventPictureWidget
 local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
 	UpdateOrthBackground(New_MIAEventPictureWidget)
 	UpdateBelcheroBackground(New_MIAEventPictureWidget)
 end
 NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
+
+-- Hook into new instances of MIAGameModeBase (hot-reload friendly)
+local function HookMIAGameModeBase(New_MIAGameModeBase)
+	if New_MIAGameModeBase:IsValid() then
+		-- Hook into GameModeBase's ReceiveTick, but this function is only available on subclasses of
+		-- BP_MIAGameModeBase_C.
+		if "BP_MIAGameMode_C" ~= New_MIAGameModeBase:GetClass():GetFName():ToString() then
+			Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameModeBase.BP_MIAGameModeBase_C:ReceiveTick",
+					BP_MIAGameModeBase_C__ReceiveTick)
+		end
+	else
+		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameModeBase", HookMIAGameModeBase)
+	end
+end
+HookMIAGameModeBase(FindFirstOf("BP_MIAGameModeBase_C"))
 
 Utils.RegisterCommand("spt", function(FullCommand, Parameters, Log)
 	local NewHour = tonumber(Parameters[1])
