@@ -25,6 +25,19 @@ local ORTH_SUB_LOCATIONS = {
 	RELIC_APPRAISAL = 3,
 }
 
+local SaveSession = {
+	-- The Minute component is not an integer as delta values will be added to it.
+	PlayerTime = {
+		Hour = 0,
+		Minute = 0,
+	},
+	PrevMapNo = nil,
+
+	-- Instances
+	GI = nil,
+	CDO_MapEnv = nil,
+}
+
 -- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
 -- layer is 6 seconds in the first layer.
 local TIME_SPEED_PER_LAYER = {
@@ -35,33 +48,27 @@ local TIME_SPEED_PER_LAYER = {
 	[5] = 6,
 }
 
--- 1 Morning [4-6)
--- 2 Daytime [6-19)
--- 3 Evening [19-20)
--- 4 Night [20-4)
+-- Time Segment now depends on the BP_MapEnvironment_C TimeSegmentInfo values.
 local function GetTimeSegmentNoFromHour(Hour)
-	if Hour < 4 then
+	local MorningBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4
+	local DaytimeBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.DaytimeBegin_6_7F3B82CD41CB381CB7FE53B883B8F3A9
+	local EveningBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E
+	local NightBegin = SaveSession.CDO_MapEnv.TimeSegmentInfo.NightBegin_10_41484B7E45F89103EACA158873AB0A63
+
+	Hour = Hour * 100
+
+	if Hour < MorningBegin then
 		return 4
-	elseif Hour < 6 then
+	elseif Hour < DaytimeBegin then
 		return 1
-	elseif Hour < 19 then
+	elseif Hour < EveningBegin then
 		return 2
-	elseif Hour < 20 then
+	elseif Hour < NightBegin then
 		return 3
 	else
 		return 4
 	end
 end
-
-local SaveSession = {
-	-- The Minute component is not an integer as delta values will be added to it.
-	PlayerTime = {
-		Hour = 0,
-		Minute = 0,
-	},
-	PrevMapNo = nil,
-	GI = nil,
-}
 
 -- Gets the hour and min properties of the DateTime table and returns it as a table with {Hour, Minute}
 local function GetPlayerTimeFromOsDate(DateTime)
@@ -75,6 +82,9 @@ end
 -- adjusts accordingly when it exceeds.
 local function AddDeltaToPlayerTime(Delta, PlayerTime, OutParam)
 	if not Delta then return end
+
+	-- In case the optional OutParam is not used
+	OutParam = OutParam or {}
 
 	PlayerTime.Minute = PlayerTime.Minute + Delta
 
@@ -129,6 +139,23 @@ local function GetTimeDilation(PrevMapNo, CurrentMapNo)
 			NextMapInfo.Name:ToString(), NextMapInfo.ID, NextMapInfo.Floor, NextMapInfo.Depth, TimeDilation)
 
 	return TimeDilation
+end
+
+-- Change default BP_MapEnvironment_C (CDO) here.
+local function InitDefaultMapEnvironment()
+	local BP_MapEnvironment_C = StaticFindObject("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.Default__BP_MapEnvironment_C")
+	if not BP_MapEnvironment_C:IsValid() then
+		Utils.Log("BP_MapEnvironment_C is not valid. Cannot init Map Environment changes.")
+		return
+	end
+
+	-- Transition time in seconds
+	BP_MapEnvironment_C.TransitionTime = 60
+
+	-- Modify when each time segment starts
+	BP_MapEnvironment_C.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E = 1800
+
+	CDO_MapEnv = BP_MapEnvironment_C
 end
 
 local function ChangeGameTimeSegmentByHour(Hour)
@@ -274,6 +301,8 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
 				WBP_EventBG_C__OnLoaded_6C51)
+
+		InitDefaultMapEnvironment()
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
