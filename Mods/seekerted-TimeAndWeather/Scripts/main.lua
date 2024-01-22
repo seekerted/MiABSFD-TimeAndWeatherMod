@@ -275,8 +275,6 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
 				WBP_EventBG_C__OnLoaded_6C51)
-
-		require("dev")
 	else
 		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
 	end
