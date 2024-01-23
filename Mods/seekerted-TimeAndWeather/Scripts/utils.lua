@@ -1,11 +1,21 @@
--- Ted the Seeker's utils.lua 2024-01-22
+-- Ted the Seeker's utils.lua 2024-01-24
 local Utils = {}
 
 local RegisteredHooks = {}
 
-Utils.ModName = "TimeAndWeather"
-Utils.ModAuthor = "seekerted"
-Utils.ModVer = "0.3.7"
+Utils.ModName = nil
+Utils.ModAuthor = nil
+Utils.ModVer = nil
+
+-- Init values and start
+function Utils.Init(Author, Name, Ver)
+	Utils.ModAuthor = Author
+	Utils.ModName = Name
+	Utils.ModVer = Ver
+
+	Utils.Log("Starting %s (%s) by %s", Utils.ModName, Utils.ModVer, Utils.ModAuthor)
+	Utils.Log(_VERSION)
+end
 
 -- Prints to console in the format of [<author>-<mod>] <message> in a new line.
 function Utils.Log(Format, ...)

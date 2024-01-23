@@ -1,9 +1,7 @@
 local Utils = require("utils")
 local Consts = require("consts")
 
-Utils.Log("Starting Time and Weather Mod by Ted the Seeker")
-Utils.Log(string.format("Version %s", Utils.ModVer))
-Utils.Log(_VERSION)
+Utils.Init("seekerted", "TimeAndWeather", "0.3.7")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
