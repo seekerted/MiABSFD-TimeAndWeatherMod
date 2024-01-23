@@ -1,4 +1,4 @@
-# MiA Time and Weather Mod
+# MiABSFD Time and Weather Mod
 
 ## Current Features
 
@@ -29,6 +29,7 @@ If you've already installed UE4SS previously (maybe from another one of my mods?
 
 1. Grab the latest release of this repository, or just download/clone.
 1. In your copy of the repository, paste all the files inside the top folder into the _executable folder_.
+	- If it asks if you want to overwrite files, as long as it's not in the `Mods` folder, then it's fine, it doesn't matter.
 
 ## Usage
 
@@ -56,7 +57,7 @@ Special thanks to:
 
 ## Changelog
 
-```
+```text
 0.3.7
 - Initial implementation of time ticking in game. Time speed depends on depth and ascent/descent.
 ```
