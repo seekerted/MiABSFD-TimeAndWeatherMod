@@ -17,9 +17,16 @@ on how deep you are and where you're travelling to).
 
 ## Installation
 
-1. Download [UE4SS Experimental Release v2.5.2-439](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental) (`UE4SS_v2.5.2-439-g3cea237.zip`).
+If you've already installed UE4SS previously (maybe from another one of my mods?) you can skip to the mod part.
+
+### Install UE4SS
+
+1. Download [UE4SS Experimental Release v2.5.2-570](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental) (`UE4SS_v2.5.2-570-g37e727b.zip`).
 1. Make a backup of the game's _executable folder_ (`\steamapps\common\MadeInAbyss-BSFD\MadeInAbyss-BSFD\Binaries\Win64`). This is so that you can revert the game back to a clean slate in case something happens.
-1. Extract `UE4SS_v2.5.2-439-g3cea237.zip` into the _executable folder_.
+1. Extract `UE4SS_v2.5.2-570-g37e727b.zip` into the _executable folder_.
+
+### Install this mod
+
 1. Grab the latest release of this repository, or just download/clone.
 1. In your copy of the repository, paste all the files inside the top folder into the _executable folder_.
 
