@@ -214,6 +214,7 @@ end
 local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
 	-- Set the PlayerTime from OS time
 	SaveSession.PlayerTime = GetPlayerTimeFromOsDate(os.date("*t"))
+	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 
 	Utils.Log("Loading OS Time of %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 end
