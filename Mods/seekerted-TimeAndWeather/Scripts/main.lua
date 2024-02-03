@@ -2,7 +2,7 @@ local Utils = require("utils")
 local Consts = require("consts")
 local WidgetTime = require("w_time")
 
-Utils.Init("seekerted", "TimeAndWeather", "0.4.0")
+Utils.Init("seekerted", "TimeAndWeather", "0.4.1")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
@@ -61,10 +61,10 @@ local function AddDeltaToPlayerTime(Delta, PlayerTime, OutParam)
 
 	PlayerTime.Minute = PlayerTime.Minute + Delta
 
-	if PlayerTime.Minute >= Consts.MINS_IN_HOUR then
+	if math.floor(PlayerTime.Minute) >= Consts.MINS_IN_HOUR then
 		OutParam.IsHourChanged = true
 		PlayerTime.Hour = PlayerTime.Hour + math.floor(PlayerTime.Minute / Consts.MINS_IN_HOUR)
-		PlayerTime.Minute = PlayerTime.Minute % Consts.MINS_IN_HOUR
+		PlayerTime.Minute = math.floor(PlayerTime.Minute % Consts.MINS_IN_HOUR)
 	end
 
 	if PlayerTime.Hour >= Consts.HOURS_IN_DAY then
