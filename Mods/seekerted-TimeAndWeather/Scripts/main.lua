@@ -1,7 +1,8 @@
 local Utils = require("utils")
 local Consts = require("consts")
+local WidgetTime = require("w_time")
 
-Utils.Init("seekerted", "TimeAndWeather", "0.3.7")
+Utils.Init("seekerted", "TimeAndWeather", "0.4.0")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
@@ -261,6 +262,13 @@ local function BP_MIAGameModeBase_C__ReceiveTick(Param_BP_MIAGameModeBase_C, Par
 	TickPlayerTime(Param_DeltaSeconds:get())
 end
 
+-- Called when the widget that shows layer and map name has finished playing
+local function WBP_MapNameLayout_C__OnAnimationFinished(Param_WBP_MapNameLayout_C, Param_Animation)
+	ExecuteWithDelay(500, function()
+		WidgetTime.Start(SaveSession.PlayerTime, SaveSession.GI)
+	end)
+end
+
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
 local function HookMIAGameInstance(New_MIAGameInstance)
 	if New_MIAGameInstance:IsValid() then
@@ -278,6 +286,9 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
 				WBP_EventBG_C__OnLoaded_6C51)
+
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/MapName/WBP_MapNameLayout.WBP_MapNameLayout_C:OnAnimationFinished",
+				WBP_MapNameLayout_C__OnAnimationFinished)
 
 		InitDefaultMapEnvironment()
 	else
