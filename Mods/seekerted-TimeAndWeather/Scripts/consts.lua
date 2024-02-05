@@ -6,6 +6,10 @@ return {
 	-- Map stuff
 	MAP_NO = {
 		INVERTED_FOREST = 12,
+		HELLS_CROSSING = 13,
+		INVERTED_ARBOR = 14,
+		SEEKER_CAMP = 15,
+		EDGE_OF_THE_ABYSS = 18,
 
 		ORTH = 60,
 		BELCHERO = 80,
