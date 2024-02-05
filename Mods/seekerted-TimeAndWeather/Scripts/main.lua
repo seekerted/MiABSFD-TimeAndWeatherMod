@@ -1,6 +1,7 @@
 local Utils = require("utils")
 local Consts = require("consts")
 local WidgetTime = require("w_time")
+local MapEnv = require("mapenv")
 
 Utils.Init("seekerted", "TimeAndWeather", "0.4.1")
 
@@ -269,6 +270,11 @@ local function WBP_MapNameLayout_C__OnAnimationFinished(Param_WBP_MapNameLayout_
 	end)
 end
 
+-- Called after the Map Environment has already been established given the specific Map and Layer
+local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
+	MapEnv.OverrideIfExists(Param_BP_MapEnvironment_C:get())
+end
+
 -- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
 local function HookMIAGameInstance(New_MIAGameInstance)
 	if New_MIAGameInstance:IsValid() then
@@ -289,6 +295,9 @@ local function HookMIAGameInstance(New_MIAGameInstance)
 
 		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/MapName/WBP_MapNameLayout.WBP_MapNameLayout_C:OnAnimationFinished",
 				WBP_MapNameLayout_C__OnAnimationFinished)
+
+		Utils.RegisterHookOnce("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.BP_MapEnvironment_C:InitMapEnvActors",
+				BP_MapEnvironment_C__InitMapEnvActors)
 
 		InitDefaultMapEnvironment()
 	else
