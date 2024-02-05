@@ -5,6 +5,8 @@ return {
 
 	-- Map stuff
 	MAP_NO = {
+		INVERTED_FOREST = 12,
+
 		ORTH = 60,
 		BELCHERO = 80,
 	},
