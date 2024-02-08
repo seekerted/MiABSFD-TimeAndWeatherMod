@@ -26,6 +26,14 @@ return {
 		{R = 0.05, G = 0.1, B = 0.25, A = 1},
 	},
 
+	-- RGBA colors for the Seeker Camp Interior visuals.
+	SEEKER_CAMP_INTERIOR_TIME_SEGMENT = {
+		{R = 0.42, G = 0.41, B = 0.23, A = 1},
+		{R = 1, G = 1, B = 1, A = 1},
+		{R = 0.5, G = 0.3, B = 0.28, A = 1},
+		{R = 0.31, G = 0.32, B = 0.40, A = 1},
+	},
+
 	-- The times when each time segment will start
 	TIME_SEGMENT_BEGIN = {
 		MorningBegin = 400,

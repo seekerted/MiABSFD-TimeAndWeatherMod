@@ -137,6 +137,15 @@ local function ChangeGameTimeSegmentByHour(Hour)
 	SaveSession.GI:SetAbyssTime(Hour, 0)
 end
 
+local function UpdateSeekerCampBackground(New_MIAEventPictureWidget)
+	-- Check if we're in the Seeker Camp Interior
+	if not SaveSession.GI or Consts.MAP_NO.SEEKER_CAMP_INTERIOR ~= SaveSession.GI.PlayMapNo then return end
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
+
+	New_MIAEventPictureWidget:SetColorAndOpacity(Consts.SEEKER_CAMP_INTERIOR_TIME_SEGMENT[TimeSegmentNo])
+end
+
 local function UpdateBelcheroBackground(New_MIAEventPictureWidget)
 	-- Check if we're in Belchero
 	if not SaveSession.GI or Consts.MAP_NO.BELCHERO ~= SaveSession.GI.PlayMapNo then return end
@@ -310,6 +319,7 @@ HookMIAGameInstance(FindFirstOf("BP_MIAGameInstance_C"))
 local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
 	UpdateOrthBackground(New_MIAEventPictureWidget)
 	UpdateBelcheroBackground(New_MIAEventPictureWidget)
+	UpdateSeekerCampBackground(New_MIAEventPictureWidget)
 end
 NotifyOnNewObject("/Script/MadeInAbyss.MIAEventPictureWidget", HookMIAEventPictureWidget)
 
