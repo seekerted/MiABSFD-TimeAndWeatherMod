@@ -2,8 +2,9 @@ local Utils = require("utils")
 local Consts = require("consts")
 local WidgetTime = require("w_time")
 local MapEnv = require("mapenv")
+local SS = require("skysphere")
 
-Utils.Init("seekerted", "TimeAndWeather", "0.4.1")
+Utils.Init("seekerted", "TimeAndWeather", "0.4.3")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
@@ -218,6 +219,9 @@ end
 local function BP_MIAGameInstance_C__OnSuccess_084D(Param_BP_MIAGameInstance_C)
 	-- Update time segment (instantly instead of transition)
 	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
+
+	-- Hook here to apply overrides to the BP_Sky_Sphere*_C, depending on time of day
+	SS.OverrideIfExists(Param_BP_MIAGameInstance_C:get().PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
 end
 
 -- Called when player selects a save slot to load 
