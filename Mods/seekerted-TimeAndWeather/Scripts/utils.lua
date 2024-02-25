@@ -1,4 +1,4 @@
--- Ted the Seeker's utils.lua 2024-01-24
+-- Ted the Seeker's utils.lua 2024-02-19
 local Utils = {}
 
 local RegisteredHooks = {}
@@ -6,6 +6,8 @@ local RegisteredHooks = {}
 Utils.ModName = nil
 Utils.ModAuthor = nil
 Utils.ModVer = nil
+
+Utils.GI = nil
 
 -- Init values and start
 function Utils.Init(Author, Name, Ver)
@@ -25,8 +27,10 @@ end
 -- Wrapper to UE4SS' RegisterHook except it prevents creating any more duplicate hooks according to function name.
 function Utils.RegisterHookOnce(FunctionName, Function)
 	if not RegisteredHooks[FunctionName] then
-		RegisterHook(FunctionName, Function)
+		local PreID, PostID = RegisterHook(FunctionName, Function)
 		RegisteredHooks[FunctionName] = true
+
+		Utils.Log("Hooked (once) onto %s (%d, %d)", FunctionName, PreID, PostID)
 	end
 end
 
@@ -60,6 +64,20 @@ function Utils.RegisterCommand(CommandName, Callback)
 	end)
 end
 
+-- Register a hook that will unregister itself after it is called
+function Utils.RegisterSingleUseHook(FunctionName, Function)
+	local PreID = nil
+	local PostID = nil
+	PreID, PostID = RegisterHook(FunctionName, function(...)
+		Function(...)
+		UnregisterHook(FunctionName, PreID, PostID)
+
+		Utils.Log("Unhooked (Was single use) %s (%d, %d)", FunctionName, PreID, PostID)
+	end)
+
+	Utils.Log("Hooked (Single use) onto %s (%d, %d)", FunctionName, PreID, PostID)
+end
+
 function Utils.PrintTable(Table)
 	local Str = "{"
 
@@ -70,5 +88,11 @@ function Utils.PrintTable(Table)
 	Str = Str .. "}"
 	Utils.Log(Str)
 end
+
+ExecuteInGameThread(function()
+	Utils.GI = FindFirstOf("BP_MIAGameInstance_C")
+
+	Utils.Log("Got game instance for Utils.GI")
+end)
 
 return Utils
