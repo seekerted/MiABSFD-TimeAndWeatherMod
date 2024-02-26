@@ -65,6 +65,8 @@ end
 
 local SkySphere1Overrides = {
 	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
+	[Consts.MAP_NO.TRAPPED_PIRATE_SHIP] = OverrideL3EdgeMaps,
+	[Consts.MAP_NO.QUADRUPLE_PIT] = OverrideL3EdgeMaps,
 	[Consts.MAP_NO.ROCK_SLIDE_HALL] = OverrideL3EdgeMaps,
 
 	[Consts.MAP_NO.GOBLETS_OF_GIANTS] = ManualSkySphere,
