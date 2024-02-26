@@ -29,6 +29,9 @@ return {
 
 		-- Layer 3
 		THE_GREAT_FAULT = 21,
+		TRAPPED_PIRATE_SHIP = 22,
+		QUADRUPLE_PIT = 25,
+		ROCK_SLIDE_HALL = 28,
 
 		-- Layer 4
 		GOBLETS_OF_GIANTS = 30,

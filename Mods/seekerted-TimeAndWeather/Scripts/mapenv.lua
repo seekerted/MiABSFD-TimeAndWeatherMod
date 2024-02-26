@@ -75,6 +75,31 @@ local function OverrideL4Outside(ME)
 	ME.EnvParamsNight.UCelSceneLightScaleInBadWeatherNight_73_FAC89C414F3607BC23020CB533036262 = 0.5
 end
 
+local function OverrideL3EdgeMaps(ME)
+	-- The Layer 3 edge maps all have some weird lighting in it. There are some random lights pointed at the cave
+	-- holes in the edges, so when you look outside the light changes. Should be fine.
+
+	-- Makes the mornings "sunrise-y" as the default ones are *not* sunrise-y at all.
+	ME.EnvParamsMorning.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.6, G = 0.4, B = 0.43, A = 0.1}
+	ME.EnvParamsMorning.ExpFogDirectionalColor_59_3798EC654A193C89E50A0EA32CB2BE8C = {R = 0.6, G = 0.4, B = 0.43, A = 1}
+	ME.EnvParamsMorning.ExpFogMaxOpacity_56_DB46BE6A4188009ABADD22A7A9E5F0E8 = 0
+	ME.EnvParamsMorning.CloudOpacity_62_C3FC50A842497B687EB71EB618ED6FC5 = 1
+
+	-- Makes the evenings "sunset-y" as the default ones are *not* sunset-y at all.
+	ME.EnvParamsEvening.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.6, G = 0.4, B = 0.43, A = 0.1}
+	ME.EnvParamsEvening.ExpFogDirectionalColor_59_3798EC654A193C89E50A0EA32CB2BE8C = {R = 0.8, G = 0.4, B = 0.43, A = 1}
+	ME.EnvParamsEvening.ExpFogMaxOpacity_56_DB46BE6A4188009ABADD22A7A9E5F0E8 = 0
+	ME.EnvParamsEvening.CloudOpacity_62_C3FC50A842497B687EB71EB618ED6FC5 = 1
+
+	-- Make the nights actually dark
+	ME.EnvParamsNight.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.04, G = 0.09, B = 0.15, A = 1}
+	ME.EnvParamsNight.ExpFogColor_30_D55BFE85467585991BAC7A95C3A5B09B.A = 0.01
+	ME.EnvParamsNight.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320.A = 0.01
+	ME.EnvParamsNight.ExpFogDirectionalColor_59_3798EC654A193C89E50A0EA32CB2BE8C = {R = 0.04, G = 0.09, B = 0.25, A = 1}
+	ME.EnvParamsNight.ExpFogMaxOpacity_56_DB46BE6A4188009ABADD22A7A9E5F0E8= 0.01
+	ME.EnvParamsNight.CloudOpacity_62_C3FC50A842497B687EB71EB618ED6FC5 = 0.01
+end
+
 local MapEnvOverrides = {
 	-- Layer 1
 	[Consts.MAP_NO.NETHERWORLD_GATE] = OverrideL1,
@@ -94,6 +119,10 @@ local MapEnvOverrides = {
 	[Consts.MAP_NO.HELLS_CROSSING] = OverrideL2InvertedMaps,
 	[Consts.MAP_NO.INVERTED_ARBOR] = OverrideL2InvertedMaps,
 	[Consts.MAP_NO.SEEKER_CAMP] = OverrideL2InvertedMaps,
+
+	-- Layer 3
+	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
+	[Consts.MAP_NO.ROCK_SLIDE_HALL] = OverrideL3EdgeMaps,
 
 	-- Layer 4
 	[Consts.MAP_NO.GOBLETS_OF_GIANTS] = OverrideL4Outside,

@@ -23,7 +23,19 @@ local SkySphere3Overrides = {
 	[Consts.MAP_NO.UPDRAFT_WASTELAND] = OverrideL2EdgeMaps,
 }
 
+local function OverrideL3EdgeMaps(SS1, TimeSegment)
+	if TimeSegment == 4 then
+		SS1['Overall color'] = {R = 0, G = 0, B = 0, A = 1}
+	else
+		SS1['Overall color'] = {R = 1, G = 1, B = 1, A = 1}
+	end
+
+	SS1:RefreshMaterial()
+end
+
 local SkySphere1Overrides = {
+	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
+	[Consts.MAP_NO.ROCK_SLIDE_HALL] = OverrideL3EdgeMaps,
 }
 
 -- Override a BP_Sky_Sphere*_C's variables if it exists for the specific map
