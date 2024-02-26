@@ -114,6 +114,14 @@ local function OverrideIdoFrontAreas(ME)
 	ME.EnvParamsNight.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.04, G = 0.06, B = 0.08, A = 1}
 end
 
+local function OverrideIdoFrontInternal(ME)
+	-- For some reason the fog here is too intense, so turn them down a bit
+	ME.EnvParamsDaytime.ExpFogColor_30_D55BFE85467585991BAC7A95C3A5B09B = {R = 0.02, G = 0.02, B = 0.02, A = 1}
+	ME.EnvParamsDaytime.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320 = {R = 0.02, G = 0.02, B = 0.02, A = 1}
+
+	OverrideIdoFrontAreas(ME)
+end
+
 local MapEnvOverrides = {
 	-- Layer 1
 	[Consts.MAP_NO.NETHERWORLD_GATE] = OverrideL1,
@@ -151,6 +159,7 @@ local MapEnvOverrides = {
 	[Consts.MAP_NO.SANDY_ICE_AREA_1] = OverrideL5Outside,
 	[Consts.MAP_NO.SANDY_ICE_AREA_2] = OverrideL5Outside,
 	[Consts.MAP_NO.IDOFRONT] = OverrideIdoFrontAreas,
+	[Consts.MAP_NO.IDOFRONT_INTERNAL] = OverrideIdoFrontInternal,
 }
 
 -- Override a BP_MapEnvironment_C's variables if it exists for the specific map
