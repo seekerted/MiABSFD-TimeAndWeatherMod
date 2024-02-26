@@ -72,6 +72,20 @@ local function WaterCrystalsOverride(SS1, TimeSegment)
 	ManualSkySphere(SS1, TimeSegment)
 end
 
+local function OverrideSandyIceAreas(SS1, TimeSegment)
+	local Tint = {
+		{R = 0.6, G = 0.2, B = 0.1, A = 1},
+		{R = 1, G = 1, B = 1, A = 1},
+		{R = 0.8, G = 0.5, B = 0.2, A = 1},
+		{R = 0, G = 0, B = 0, A = 1},
+	}
+
+	SS1['Colors determined by sun position'] = false
+	SS1['Overall color'] = Tint[TimeSegment]
+
+	SS1:RefreshMaterial()
+end
+
 local SkySphere1Overrides = {
 	-- Layer 3
 	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
@@ -84,8 +98,8 @@ local SkySphere1Overrides = {
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = ManualSkySphere,
 
 	-- Layer 5
-	[Consts.MAP_NO.WATER_CRYSTALS_1] = WaterCrystalsOverride,
-	[Consts.MAP_NO.WATER_CRYSTALS_2] = WaterCrystalsOverride,
+	[Consts.MAP_NO.SANDY_ICE_AREA_1] = OverrideSandyIceAreas,
+	[Consts.MAP_NO.SANDY_ICE_AREA_2] = OverrideSandyIceAreas,
 }
 
 -- Override a BP_Sky_Sphere*_C's variables if it exists for the specific map
