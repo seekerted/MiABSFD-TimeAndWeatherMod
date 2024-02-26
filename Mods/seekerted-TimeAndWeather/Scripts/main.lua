@@ -13,9 +13,6 @@ local SaveSession = {
 		Minute = 0,
 	},
 	PrevMapNo = nil,
-
-	-- Instances
-	GI = nil,
 }
 
 -- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
@@ -135,12 +132,12 @@ local function InitDefaultMapEnvironment()
 end
 
 local function ChangeGameTimeSegmentByHour(Hour)
-	SaveSession.GI:SetAbyssTime(Hour, 0)
+	Utils.GI:SetAbyssTime(Hour, 0)
 end
 
 local function UpdateSeekerCampBackground(New_MIAEventPictureWidget)
 	-- Check if we're in the Seeker Camp Interior
-	if not SaveSession.GI or Consts.MAP_NO.SEEKER_CAMP_INTERIOR ~= SaveSession.GI.PlayMapNo then return end
+	if Consts.MAP_NO.SEEKER_CAMP_INTERIOR ~= Utils.GI.PlayMapNo then return end
 
 	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
 
@@ -149,11 +146,11 @@ end
 
 local function UpdateBelcheroBackground(New_MIAEventPictureWidget)
 	-- Check if we're in Belchero
-	if not SaveSession.GI or Consts.MAP_NO.BELCHERO ~= SaveSession.GI.PlayMapNo then return end
+	if Consts.MAP_NO.BELCHERO ~= Utils.GI.PlayMapNo then return end
 
 	-- Check if the MIAEventPictureWidget is the right one we are looking for.
 	local WBP_EVENTBG_C = "WBP_EventBG_C"
-	if WBP_EVENTBG_C ~= New_MIAEventPictureWidget:GetClass():GetFName():ToString() or SaveSession.GI:GetFName():ToString() ~=
+	if WBP_EVENTBG_C ~= New_MIAEventPictureWidget:GetClass():GetFName():ToString() or Utils.GI:GetFName():ToString() ~=
 			New_MIAEventPictureWidget:GetOuter():GetFName():ToString() then return end
 
 	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
@@ -178,7 +175,7 @@ end
 -- Update the background visuals in Orth to match the current time.
 local function UpdateOrthBackground(New_MIAEventPictureWidget)
 	-- Check that we are on the Orth map.
-	if not SaveSession.GI or SaveSession.GI.PlayMapNo ~= Consts.MAP_NO.ORTH then return end
+	if Utils.GI.PlayMapNo ~= Consts.MAP_NO.ORTH then return end
 
 	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
 
@@ -213,15 +210,6 @@ local function UpdateOrthSubBackground(WBP_EventBG_C)
 	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
 
 	WBP_EventBG_C:SetColorAndOpacity(Consts.ORTH_TIME_SEGMENT[TimeSegmentNo])
-end
-
--- Called just before the fade out onto the new map.
-local function BP_MIAGameInstance_C__OnSuccess_084D(Param_BP_MIAGameInstance_C)
-	-- Update time segment (instantly instead of transition)
-	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
-
-	-- Hook here to apply overrides to the BP_Sky_Sphere*_C, depending on time of day
-	SS.OverrideIfExists(Param_BP_MIAGameInstance_C:get().PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
 end
 
 -- Called when player selects a save slot to load 
@@ -266,7 +254,7 @@ local function TickPlayerTime(DeltaSeconds)
 end
 
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
-	if SaveSession.GI.PlayMapNo == Consts.MAP_NO.ORTH then
+	if Utils.GI.PlayMapNo == Consts.MAP_NO.ORTH then
 		UpdateOrthSubBackground(Param_WBP_EventBG_C:get())
 	end
 end
@@ -279,7 +267,7 @@ end
 -- Called when the widget that shows layer and map name has finished playing
 local function WBP_MapNameLayout_C__OnAnimationFinished(Param_WBP_MapNameLayout_C, Param_Animation)
 	ExecuteWithDelay(500, function()
-		WidgetTime.Start(SaveSession.PlayerTime, SaveSession.GI)
+		WidgetTime.Start(SaveSession.PlayerTime, Utils.GI)
 	end)
 end
 
@@ -288,39 +276,46 @@ local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
 	MapEnv.OverrideIfExists(Param_BP_MapEnvironment_C:get())
 end
 
--- Hook into BP_MIAGameInstance_C instance (hot-reload friendly)
-local function HookMIAGameInstance(New_MIAGameInstance)
-	if New_MIAGameInstance:IsValid() then
-		Utils.Log("MIAGameInstance has been found")
-		SaveSession.GI = New_MIAGameInstance
+RegisterInitGameStatePostHook(function(Param_AGameStateBase)
+	local IsAbyssGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_AbyssGameMode.BP_AbyssGameMode_C")
+	local IsOrthGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_OrthGameMode.BP_OrthGameMode_C")
 
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData",
-				WBP_SaveLayout_C__LoadData)
+	Utils.Log("Abyss? %s Orth? %s", IsAbyssGameMode, IsOrthGameMode)
 
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel",
-				BP_MIAGameInstance_C__ChangeLevel)
+	if not IsAbyssGameMode and not IsOrthGameMode then return end
 
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_084D74CC438019371E505798B67750BF",
-				BP_MIAGameInstance_C__OnSuccess_084D)
+	-- Update time segment (instantly instead of transition)
+	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
 
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
-				WBP_EventBG_C__OnLoaded_6C51)
-
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/MapName/WBP_MapNameLayout.WBP_MapNameLayout_C:OnAnimationFinished",
-				WBP_MapNameLayout_C__OnAnimationFinished)
-
-		Utils.RegisterHookOnce("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.BP_MapEnvironment_C:InitMapEnvActors",
-				BP_MapEnvironment_C__InitMapEnvActors)
-
-		InitDefaultMapEnvironment()
-	else
-		NotifyOnNewObject("/Script/MadeInAbyss.MIAGameInstance", HookMIAGameInstance)
+	if IsAbyssGameMode then
+		-- Apply overrides to the BP_Sky_Sphere*_C, depending on time of day
+		SS.OverrideIfExists(Utils.GI.PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
 	end
-end
-HookMIAGameInstance(FindFirstOf("BP_MIAGameInstance_C"))
+end)
+
+ExecuteInGameThread(function()
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData",
+			WBP_SaveLayout_C__LoadData)
+
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel",
+			BP_MIAGameInstance_C__ChangeLevel)
+
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Event/WBP_EventBG.WBP_EventBG_C:OnLoaded_6C51A9624A6DCC627F3F8DBFEE7EF1D0",
+			WBP_EventBG_C__OnLoaded_6C51)
+
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/MapName/WBP_MapNameLayout.WBP_MapNameLayout_C:OnAnimationFinished",
+			WBP_MapNameLayout_C__OnAnimationFinished)
+
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.BP_MapEnvironment_C:InitMapEnvActors",
+			BP_MapEnvironment_C__InitMapEnvActors)
+
+	InitDefaultMapEnvironment()
+end)
 
 -- Hook into new instances of MIAEventPictureWidget
 local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
+	if not Utils.GI then return end
+
 	UpdateOrthBackground(New_MIAEventPictureWidget)
 	UpdateBelcheroBackground(New_MIAEventPictureWidget)
 	UpdateSeekerCampBackground(New_MIAEventPictureWidget)
@@ -332,7 +327,7 @@ local function HookMIAGameModeBase(New_MIAGameModeBase)
 	if New_MIAGameModeBase:IsValid() then
 		-- Hook into GameModeBase's ReceiveTick, but this function is only available on subclasses of
 		-- BP_MIAGameModeBase_C.
-		if "BP_MIAGameMode_C" ~= New_MIAGameModeBase:GetClass():GetFName():ToString() then
+		if New_MIAGameModeBase:IsA("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameModeBase.BP_MIAGameModeBase_C") then
 			Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameModeBase.BP_MIAGameModeBase_C:ReceiveTick",
 					BP_MIAGameModeBase_C__ReceiveTick)
 		end
