@@ -18,11 +18,11 @@ local function OverrideL2EdgeMaps(SS3, TimeSegment)
 	SS3:RefreshMaterial()
 end
 
-local function OverrideDeepTreeRemains(SS3, TimeSegment)
+local function OverrideL4Forests(SS3, TimeSegment)
 	local Tint = {
-		{R = 0.05, G = 0.03, B = 0.02, A = 1},
-		{R = 0.1, G = 0.1, B = 0.1, A = 1},
-		{R = 0.05, G = 0.02, B = 0.01, A = 1},
+		{R = 0.25, G = 0.15, B = 0.1, A = 1},
+		{R = 0.5, G = 0.5, B = 0.5, A = 1},
+		{R = 0.25, G = 0.1, B = 0.05, A = 1},
 		{R = 0, G = 0, B = 0, A = 1},
 	}
 
@@ -36,8 +36,9 @@ local SkySphere3Overrides = {
 	[Consts.MAP_NO.HEAVENS_WATERFALL] = OverrideL2EdgeMaps,
 	[Consts.MAP_NO.UPDRAFT_WASTELAND] = OverrideL2EdgeMaps,
 
-	[Consts.MAP_NO.ETERNAL_FORTUNES] = OverrideDeepTreeRemains,
-	[Consts.MAP_NO.DEEP_TREE_REMAINS] = OverrideDeepTreeRemains,
+	[Consts.MAP_NO.HIDDEN_HOT_SPRING] = OverrideL4Forests,
+	[Consts.MAP_NO.ETERNAL_FORTUNES] = OverrideL4Forests,
+	[Consts.MAP_NO.DEEP_TREE_REMAINS] = OverrideL4Forests,
 }
 
 local function OverrideL3EdgeMaps(SS1, TimeSegment)

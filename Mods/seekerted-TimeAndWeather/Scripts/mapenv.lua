@@ -126,6 +126,7 @@ local MapEnvOverrides = {
 
 	-- Layer 4
 	[Consts.MAP_NO.GOBLETS_OF_GIANTS] = OverrideL4Outside,
+	[Consts.MAP_NO.HIDDEN_HOT_SPRING] = OverrideL4Outside,
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = OverrideL4Outside,
 
 	-- Layer 5
