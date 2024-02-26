@@ -312,6 +312,10 @@ RegisterInitGameStatePostHook(function(Param_AGameStateBase)
 	if IsAbyssGameMode then
 		-- Apply overrides to the BP_Sky_Sphere*_C, depending on time of day
 		SS.OverrideIfExists(Utils.GI.PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
+
+		if Utils.GI.PlayMapNo == Consts.MAP_NO.NANACHIS_HIDEOUT then
+			OverrideNanachiHideoutLightBeams()
+		end
 	end
 end)
 
