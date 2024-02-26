@@ -64,6 +64,12 @@ local function ManualSkySphere(SS1, TimeSegment)
 	SS1:RefreshMaterial()
 end
 
+local function WaterCrystalsOverride(SS1, TimeSegment)
+	SS1['Cloud color'] = {R = 1, G = 1, B = 1, A = 1},
+
+	ManualSkySphere(SS1, TimeSegment)
+end
+
 local SkySphere1Overrides = {
 	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
 	[Consts.MAP_NO.TRAPPED_PIRATE_SHIP] = OverrideL3EdgeMaps,
@@ -72,6 +78,9 @@ local SkySphere1Overrides = {
 
 	[Consts.MAP_NO.GOBLETS_OF_GIANTS] = ManualSkySphere,
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = ManualSkySphere,
+
+	[Consts.MAP_NO.WATER_CRYSTALS_1] = WaterCrystalsOverride,
+	[Consts.MAP_NO.WATER_CRYSTALS_2] = WaterCrystalsOverride,
 }
 
 -- Override a BP_Sky_Sphere*_C's variables if it exists for the specific map
