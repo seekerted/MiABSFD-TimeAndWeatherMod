@@ -280,8 +280,6 @@ RegisterInitGameStatePostHook(function(Param_AGameStateBase)
 	local IsAbyssGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_AbyssGameMode.BP_AbyssGameMode_C")
 	local IsOrthGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_OrthGameMode.BP_OrthGameMode_C")
 
-	Utils.Log("Abyss? %s Orth? %s", IsAbyssGameMode, IsOrthGameMode)
-
 	if not IsAbyssGameMode and not IsOrthGameMode then return end
 
 	-- Update time segment (instantly instead of transition)
