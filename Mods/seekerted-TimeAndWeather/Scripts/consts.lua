@@ -35,6 +35,7 @@ return {
 
 		-- Layer 4
 		GOBLETS_OF_GIANTS = 30,
+		NANACHIS_HIDEOUT = 31,
 		GIANT_VINE_BRIDGE = 33,
 		ETERNAL_FORTUNES = 37,
 		DEEP_TREE_REMAINS = 38,
@@ -68,6 +69,13 @@ return {
 		{R = 1, G = 1, B = 1, A = 1},
 		{R = 0.5, G = 0.3, B = 0.28, A = 1},
 		{R = 0.31, G = 0.32, B = 0.40, A = 1},
+	},
+
+	NANACHIS_HIDEOUT_TIME_SEGMENT = {
+		{R = 0.8, G = 0.6, B = 0.4, A = 1},
+		{R = 1, G = 1, B = 1, A = 1},
+		{R = 0.8, G = 0.5, B = 0.2, A = 1},
+		{R = 0, G = 0, B = 0, A = 1},
 	},
 
 	-- The times when each time segment will start

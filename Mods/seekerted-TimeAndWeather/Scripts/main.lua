@@ -242,6 +242,23 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 end
 
+local function OverrideNanachiHideoutLightBeams()
+	local BP_LightBeam_M07_Cs = FindAllOf("BP_LightBeam_M07_C")
+	if not BP_LightBeam_M07_Cs then
+		Utils.Log("Cannot find BP_LightBeam_M07_C's in Nanachi's Hideout")
+		return
+	end
+
+	Utils.Log("Overriding light beams in Nanachi's Hideout")
+
+	local TimeSegmentNo = GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour)
+	local Color = Consts.NANACHIS_HIDEOUT_TIME_SEGMENT[TimeSegmentNo]
+
+	for _, BP_LightBeam_M07_C in pairs(BP_LightBeam_M07_Cs) do
+		BP_LightBeam_M07_C.Color = Color
+	end
+end
+
 local function TickPlayerTime(DeltaSeconds)
 	local Info = {}
 	AddDeltaToPlayerTime(DeltaSeconds, SaveSession.PlayerTime, Info)
@@ -253,6 +270,10 @@ local function TickPlayerTime(DeltaSeconds)
 
 		-- Also update the Sky Sphere
 		SS.OverrideIfExists(Utils.GI.PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
+
+		if Utils.GI.PlayMapNo == Consts.MAP_NO.NANACHIS_HIDEOUT then
+			OverrideNanachiHideoutLightBeams()
+		end
 	end
 end
 
