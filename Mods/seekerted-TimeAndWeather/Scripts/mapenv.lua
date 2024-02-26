@@ -100,7 +100,7 @@ local function OverrideL3EdgeMaps(ME)
 	ME.EnvParamsNight.CloudOpacity_62_C3FC50A842497B687EB71EB618ED6FC5 = 0.01
 end
 
-local function OverrideIdoFrontOutsides(ME)
+local function OverrideIdoFrontAreas(ME)
 	-- Makes the mornings "sunrise-y" as the default ones are *not* sunrise-y at all.
 	ME.EnvParamsMorning.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.3, G = 0.2, B = 0.2, A = 1}
 	ME.EnvParamsMorning.ExpFogColor_30_D55BFE85467585991BAC7A95C3A5B09B = {R = 0.006, G = 0.004, B = 0.004, A = 1}
@@ -147,10 +147,10 @@ local MapEnvOverrides = {
 	[Consts.MAP_NO.SEA_OF_CORPSES_1] = OverrideL5Outside,
 	[Consts.MAP_NO.SEA_OF_CORPSES_2] = OverrideL5Outside,
 	[Consts.MAP_NO.HAIL_JAIL] = OverrideL5Outside,
-	[Consts.MAP_NO.IDOFRONT_AREA] = OverrideIdoFrontOutsides,
+	[Consts.MAP_NO.IDOFRONT_AREA] = OverrideIdoFrontAreas,
 	[Consts.MAP_NO.SANDY_ICE_AREA_1] = OverrideL5Outside,
 	[Consts.MAP_NO.SANDY_ICE_AREA_2] = OverrideL5Outside,
-	[Consts.MAP_NO.IDOFRONT] = OverrideIdoFrontOutsides,
+	[Consts.MAP_NO.IDOFRONT] = OverrideIdoFrontAreas,
 }
 
 -- Override a BP_MapEnvironment_C's variables if it exists for the specific map

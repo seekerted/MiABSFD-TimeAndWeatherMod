@@ -51,6 +51,7 @@ return {
 		SANDY_ICE_AREA_1 = 46,
 		SANDY_ICE_AREA_2 = 47,
 		IDOFRONT = 48,
+		IDOFRONT_INTERNAL = 49,
 
 		-- Surface
 		ORTH = 60,
