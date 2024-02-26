@@ -4,7 +4,7 @@ local WidgetTime = require("w_time")
 local MapEnv = require("mapenv")
 local SS = require("skysphere")
 
-Utils.Init("seekerted", "TimeAndWeather", "0.4.3")
+Utils.Init("seekerted", "TimeAndWeather", "0.5.0")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
