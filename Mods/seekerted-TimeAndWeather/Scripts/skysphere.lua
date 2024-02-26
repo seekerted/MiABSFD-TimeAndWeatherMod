@@ -66,7 +66,7 @@ local function ManualSkySphere(SS1, TimeSegment)
 	SS1:RefreshMaterial()
 end
 
-local function WaterCrystalsOverride(SS1, TimeSegment)
+local function OverrideWaterCrystals(SS1, TimeSegment)
 	SS1['Cloud color'] = {R = 1, G = 1, B = 1, A = 1},
 
 	ManualSkySphere(SS1, TimeSegment)
@@ -98,6 +98,8 @@ local SkySphere1Overrides = {
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = ManualSkySphere,
 
 	-- Layer 5
+	[Consts.MAP_NO.WATER_CRYSTALS_1] = OverrideWaterCrystals,
+	[Consts.MAP_NO.WATER_CRYSTALS_2] = OverrideWaterCrystals,
 	[Consts.MAP_NO.SANDY_ICE_AREA_1] = OverrideSandyIceAreas,
 	[Consts.MAP_NO.SANDY_ICE_AREA_2] = OverrideSandyIceAreas,
 }
