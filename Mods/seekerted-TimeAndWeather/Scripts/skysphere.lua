@@ -33,9 +33,11 @@ local function OverrideL4Forests(SS3, TimeSegment)
 end
 
 local SkySphere3Overrides = {
+	-- Layer 2
 	[Consts.MAP_NO.HEAVENS_WATERFALL] = OverrideL2EdgeMaps,
 	[Consts.MAP_NO.UPDRAFT_WASTELAND] = OverrideL2EdgeMaps,
 
+	-- Layer 4
 	[Consts.MAP_NO.HIDDEN_HOT_SPRING] = OverrideL4Forests,
 	[Consts.MAP_NO.ETERNAL_FORTUNES] = OverrideL4Forests,
 	[Consts.MAP_NO.DEEP_TREE_REMAINS] = OverrideL4Forests,
@@ -71,14 +73,17 @@ local function WaterCrystalsOverride(SS1, TimeSegment)
 end
 
 local SkySphere1Overrides = {
+	-- Layer 3
 	[Consts.MAP_NO.THE_GREAT_FAULT] = OverrideL3EdgeMaps,
 	[Consts.MAP_NO.TRAPPED_PIRATE_SHIP] = OverrideL3EdgeMaps,
 	[Consts.MAP_NO.QUADRUPLE_PIT] = OverrideL3EdgeMaps,
 	[Consts.MAP_NO.ROCK_SLIDE_HALL] = OverrideL3EdgeMaps,
 
+	-- Layer 4
 	[Consts.MAP_NO.GOBLETS_OF_GIANTS] = ManualSkySphere,
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = ManualSkySphere,
 
+	-- Layer 5
 	[Consts.MAP_NO.WATER_CRYSTALS_1] = WaterCrystalsOverride,
 	[Consts.MAP_NO.WATER_CRYSTALS_2] = WaterCrystalsOverride,
 }
