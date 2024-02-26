@@ -250,6 +250,9 @@ local function TickPlayerTime(DeltaSeconds)
 	if Info and Info.IsHourChanged then
 		Utils.Log("Hour has changed (%02d:%02.0f)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
 		ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
+
+		-- Also update the Sky Sphere
+		SS.OverrideIfExists(Utils.GI.PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
 	end
 end
 
