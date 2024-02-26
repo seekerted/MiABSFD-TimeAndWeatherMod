@@ -47,8 +47,10 @@ return {
 		HAIL_JAIL = 41,
 		WATER_CRYSTALS_1 = 42,
 		WATER_CRYSTALS_2 = 43,
+		IDOFRONT_AREA = 45,
 		SANDY_ICE_AREA_1 = 46,
 		SANDY_ICE_AREA_2 = 47,
+		IDOFRONT = 48,
 
 		-- Surface
 		ORTH = 60,
