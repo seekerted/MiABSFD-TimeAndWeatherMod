@@ -3,6 +3,7 @@ local Consts = require("consts")
 local WidgetTime = require("w_time")
 local MapEnv = require("mapenv")
 local SS = require("skysphere")
+local Weather = require("weather")
 
 Utils.Init("seekerted", "TimeAndWeather", "0.5.0")
 
@@ -274,6 +275,8 @@ local function TickPlayerTime(DeltaSeconds)
 		if Utils.GI.PlayMapNo == Consts.MAP_NO.NANACHIS_HIDEOUT then
 			OverrideNanachiHideoutLightBeams()
 		end
+
+		Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle)
 	end
 end
 
@@ -298,6 +301,10 @@ end
 -- Called after the Map Environment has already been established given the specific Map and Layer
 local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
 	MapEnv.OverrideIfExists(Param_BP_MapEnvironment_C:get())
+end
+
+local function BP_MIAGameInstance_C__OnSuccess_084D()
+	Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle)
 end
 
 RegisterInitGameStatePostHook(function(Param_AGameStateBase)
@@ -334,6 +341,9 @@ ExecuteInGameThread(function()
 
 	Utils.RegisterHookOnce("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.BP_MapEnvironment_C:InitMapEnvActors",
 			BP_MapEnvironment_C__InitMapEnvActors)
+
+	Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_084D74CC438019371E505798B67750BF",
+			BP_MIAGameInstance_C__OnSuccess_084D)
 
 	InitDefaultMapEnvironment()
 end)
