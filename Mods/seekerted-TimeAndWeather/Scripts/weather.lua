@@ -193,4 +193,20 @@ function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank)
 	SetAbyssWeather(Consts.WEATHER.NONE)
 end
 
+-- Some maps have weather volumes (I'm not sure what they are) that when the player steps on them gets triggered.
+-- Disable them.
+function Weather.OverrideWeatherVolumes()
+	local MIAWeatherVolumes = FindAllOf("MIAWeatherVolume")
+	if not MIAWeatherVolumes then
+		Utils.Log("No instances of MIAWeatherVolume were found")
+		return
+	end
+
+	for _, MIAWeatherVolume in pairs(MIAWeatherVolumes) do
+		MIAWeatherVolume.bActorEnableCollision = false
+	end
+
+	Utils.Log("Overrode weather volumes in map")
+end
+
 return Weather

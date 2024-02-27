@@ -323,6 +323,8 @@ RegisterInitGameStatePostHook(function(Param_AGameStateBase)
 		if Utils.GI.PlayMapNo == Consts.MAP_NO.NANACHIS_HIDEOUT then
 			OverrideNanachiHideoutLightBeams()
 		end
+
+		Weather.OverrideWeatherVolumes()
 	end
 end)
 
