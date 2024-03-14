@@ -26,6 +26,8 @@ local TIME_SPEED_PER_LAYER = {
 	[5] = 6,
 }
 
+local TIME_SEGMENT_TRANSITION_TIME = 1
+
 -- Time Segment now depends on the consts values
 local function GetTimeSegmentNoFromHour(Hour)
 	Hour = Hour * 100
@@ -123,7 +125,7 @@ local function InitDefaultMapEnvironment()
 	end
 
 	-- Transition time in seconds
-	BP_MapEnvironment_C.TransitionTime = 60
+	BP_MapEnvironment_C.TransitionTime = TIME_SEGMENT_TRANSITION_TIME
 
 	-- Set the time segment begins from the consts
 	BP_MapEnvironment_C.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4 = Consts.TIME_SEGMENT_BEGIN.MorningBegin
