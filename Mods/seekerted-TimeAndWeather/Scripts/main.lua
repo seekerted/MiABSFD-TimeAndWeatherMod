@@ -26,7 +26,7 @@ local TIME_SPEED_PER_LAYER = {
 	[5] = 6,
 }
 
-local TIME_SEGMENT_TRANSITION_TIME = 1
+local TIME_SEGMENT_TRANSITION_TIME = 60
 
 -- Time Segment now depends on the consts values
 local function GetTimeSegmentNoFromHour(Hour)
