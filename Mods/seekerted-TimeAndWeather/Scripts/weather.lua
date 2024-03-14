@@ -85,16 +85,10 @@ end
 
 -- For Layer 2 Edge of the Abyss
 -- Good weather is none
--- Bad weather is 75% ice, 25% white out
+-- Bad weather is ice
 local function SetEdgeOfTheAbyssWeather(IsBadWeather, PlayTime)
 	if IsBadWeather then
-		local IsWhiteType = GetOneFourthChance(PlayTime)
-
-		if IsWhiteType then
-			SetAbyssWeather(Consts.WEATHER.WHITE)
-		else
-			SetAbyssWeather(Consts.WEATHER.ICE)
-		end
+		SetAbyssWeather(Consts.WEATHER.ICE)
 	else
 		SetAbyssWeather(Consts.WEATHER.NONE)
 	end
