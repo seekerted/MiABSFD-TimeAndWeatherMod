@@ -3,6 +3,7 @@ local Utils = require("utils")
 local WTime = {}
 
 local WidgetTime = nil
+local WIDGET_TIME_NAME = "ST_WidgetTime_C"
 
 local function InterruptWidgetTime()
 	if not WidgetTime or not WidgetTime:IsValid() or not WidgetTime:IsInViewport() then return end
@@ -34,9 +35,15 @@ local function ShowWidgetTime(PlayerTime)
 end
 
 function WTime.Start(PlayerTime, GI)
-	WidgetTime = StaticConstructObject(StaticFindObject("/Game/MadeInAbyss/UI/Sequence/WBP_SequenceText.WBP_SequenceText_C"),
-			GI, 0, 0, 0, nil, false, false, nil)
-	
+	local PrevWidgetTime = FindObject("WBP_SequenceText_C", WIDGET_TIME_NAME)
+
+	if PrevWidgetTime:IsValid() then
+		WidgetTime = PrevWidgetTime
+	else
+		WidgetTime = StaticConstructObject(StaticFindObject("/Game/MadeInAbyss/UI/Sequence/WBP_SequenceText.WBP_SequenceText_C"),
+				GI, FName(WIDGET_TIME_NAME), 0, 0, nil, false, false, nil)
+	end
+
 	if not WidgetTime:IsValid() then
 		Utils.Log("Unable to create Widget Time")
 		return
