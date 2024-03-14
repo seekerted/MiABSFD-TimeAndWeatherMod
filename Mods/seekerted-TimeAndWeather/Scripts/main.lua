@@ -45,6 +45,38 @@ local function GetTimeSegmentNoFromHour(Hour)
 	end
 end
 
+-- Returns true if the time and weather mod should have no effect, depending on the event numbers (the time and weather
+-- is changed by the story script, so we back off)
+local PrevPlayEventNo = nil
+local function IsDisabled(PlayEventNo)
+	local Reason = nil
+
+	-- Not valid game mode
+	if PlayEventNo < 200000 then
+		Reason = "not valid game mode"
+	end
+
+	-- If Hello Abyss
+	if 100000 <= PlayEventNo and PlayEventNo <= 200000 then
+		Reason = "game mode is Hello Abyss"
+	end
+
+	if 200100 <= PlayEventNo and PlayEventNo <= 200110 then
+		Reason = "Deep in Abyss intro"
+	end
+
+	if 200350 <= PlayEventNo and PlayEventNo <= 200380 then
+		Reason = "Trapped with Tiare survival mission"
+	end
+
+	if Reason ~= nil and PlayEventNo ~= PrevPlayEventNo then
+		Utils.Log("Disabling because %s [EvNo: %d]", Reason, PlayEventNo)
+		PrevPlayEventNo = PlayEventNo
+	end
+
+	return Reason ~= nil
+end
+
 -- Gets the hour and min properties of the DateTime table and returns it as a table with {Hour, Minute}
 local function GetPlayerTimeFromOsDate(DateTime)
 	return {
@@ -248,6 +280,8 @@ local function TickPlayerTime(DeltaSeconds)
 	local Info = {}
 	AddDeltaToPlayerTime(DeltaSeconds, SaveSession.PlayerTime, Info)
 
+	if Utils.GI and IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	-- Update time segment when the hour changes
 	if Info and Info.IsHourChanged then
 		Utils.Log("Hour has changed (%02d:%02.0f)", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
@@ -265,6 +299,8 @@ local function TickPlayerTime(DeltaSeconds)
 end
 
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
+	if Utils.GI and IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	if Utils.GI.PlayMapNo == Consts.MAP_NO.ORTH then
 		UpdateOrthSubBackground(Param_WBP_EventBG_C:get())
 	end
@@ -277,6 +313,8 @@ end
 
 -- Called when the widget that shows layer and map name has finished playing
 local function WBP_MapNameLayout_C__OnAnimationFinished(Param_WBP_MapNameLayout_C, Param_Animation)
+	if Utils.GI and IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	ExecuteWithDelay(500, function()
 		WidgetTime.Start(SaveSession.PlayerTime, Utils.GI)
 	end)
@@ -284,6 +322,8 @@ end
 
 -- Called after the Map Environment has already been established given the specific Map and Layer
 local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
+	if IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	local BP_MapEnvironment_C = Param_BP_MapEnvironment_C:get()
 
 	-- Transition time in seconds
@@ -299,10 +339,14 @@ local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
 end
 
 local function BP_MIAGameInstance_C__OnSuccess_084D()
+	if IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle)
 end
 
 RegisterInitGameStatePostHook(function(Param_AGameStateBase)
+	if Utils.GI and IsDisabled(Utils.GI.PlayEventNo) then return end
+
 	local IsAbyssGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_AbyssGameMode.BP_AbyssGameMode_C")
 	local IsOrthGameMode = Param_AGameStateBase:get():IsA("/Game/MadeInAbyss/Core/GameModes/BP_OrthGameMode.BP_OrthGameMode_C")
 
@@ -345,7 +389,7 @@ end)
 
 -- Hook into new instances of MIAEventPictureWidget
 local function HookMIAEventPictureWidget(New_MIAEventPictureWidget)
-	if not Utils.GI then return end
+	if not Utils.GI or IsDisabled(Utils.GI.PlayEventNo) then return end
 
 	UpdateOrthBackground(New_MIAEventPictureWidget)
 	UpdateBelcheroBackground(New_MIAEventPictureWidget)
