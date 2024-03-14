@@ -33,6 +33,7 @@ local function OverrideL5Outside(ME)
 	ME.EnvParamsMorning.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320 = {R = 0.1, G = 0.06, B = 0.03, A = 1}
 	ME.EnvParamsMorning.UCelSceneLightScale_65_23914E5F475F9EEC9F441B90AE7561C5 = 5
 	ME.EnvParamsMorning.UCelSceneLightScaleInBadWeatherNight_73_FAC89C414F3607BC23020CB533036262 = 5
+	ME.EnvParamsMorning.CloudColor_34_943E82CD453753C24EAE5F8EEB8D0466 = {R = 0.1, G = 0.1, B = 0.1, A = 1}
 
 	-- Removes the harsh purple tint in the evening
 	ME.EnvParamsEvening.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.7, G = 0.2, B = 0.1, A = 1}
@@ -41,6 +42,7 @@ local function OverrideL5Outside(ME)
 	ME.EnvParamsEvening.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320 = {R = 0.5, G = 0.2, B = 0.1, A = 1}
 	ME.EnvParamsEvening.UCelSceneLightScale_65_23914E5F475F9EEC9F441B90AE7561C5 = 5
 	ME.EnvParamsEvening.UCelSceneLightScaleInBadWeatherNight_73_FAC89C414F3607BC23020CB533036262 = 5
+	ME.EnvParamsEvening.CloudColor_34_943E82CD453753C24EAE5F8EEB8D0466 = {R = 0.1, G = 0.1, B = 0.1, A = 1}
 
 	-- Make the nights not too dark
 	ME.EnvParamsNight.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.06, G = 0.09, B = 0.1, A = 1}
