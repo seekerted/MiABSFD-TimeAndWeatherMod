@@ -116,24 +116,6 @@ local function GetTimeDilation(PrevMapNo, CurrentMapNo)
 	return TimeDilation
 end
 
--- Change default BP_MapEnvironment_C (CDO) here.
-local function InitDefaultMapEnvironment()
-	local BP_MapEnvironment_C = StaticFindObject("/Game/MadeInAbyss/Maps/Environment/BP_MapEnvironment.Default__BP_MapEnvironment_C")
-	if not BP_MapEnvironment_C:IsValid() then
-		Utils.Log("BP_MapEnvironment_C is not valid. Cannot init Map Environment changes.")
-		return
-	end
-
-	-- Transition time in seconds
-	BP_MapEnvironment_C.TransitionTime = TIME_SEGMENT_TRANSITION_TIME
-
-	-- Set the time segment begins from the consts
-	BP_MapEnvironment_C.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4 = Consts.TIME_SEGMENT_BEGIN.MorningBegin
-	BP_MapEnvironment_C.TimeSegmentInfo.DaytimeBegin_6_7F3B82CD41CB381CB7FE53B883B8F3A9 = Consts.TIME_SEGMENT_BEGIN.DaytimeBegin
-	BP_MapEnvironment_C.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E = Consts.TIME_SEGMENT_BEGIN.EveningBegin
-	BP_MapEnvironment_C.TimeSegmentInfo.NightBegin_10_41484B7E45F89103EACA158873AB0A63 = Consts.TIME_SEGMENT_BEGIN.NightBegin
-end
-
 local function ChangeGameTimeSegmentByHour(Hour)
 	Utils.GI:SetAbyssTime(Hour, 0)
 end
@@ -302,7 +284,18 @@ end
 
 -- Called after the Map Environment has already been established given the specific Map and Layer
 local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
-	MapEnv.OverrideIfExists(Param_BP_MapEnvironment_C:get())
+	local BP_MapEnvironment_C = Param_BP_MapEnvironment_C:get()
+
+	-- Transition time in seconds
+	BP_MapEnvironment_C.TransitionTime = TIME_SEGMENT_TRANSITION_TIME
+
+	-- Set the time segment begins from the consts
+	BP_MapEnvironment_C.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4 = Consts.TIME_SEGMENT_BEGIN.MorningBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.DaytimeBegin_6_7F3B82CD41CB381CB7FE53B883B8F3A9 = Consts.TIME_SEGMENT_BEGIN.DaytimeBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.EveningBegin_8_BFB529A749F9C849F092DA9A2B459A8E = Consts.TIME_SEGMENT_BEGIN.EveningBegin
+	BP_MapEnvironment_C.TimeSegmentInfo.NightBegin_10_41484B7E45F89103EACA158873AB0A63 = Consts.TIME_SEGMENT_BEGIN.NightBegin
+
+	MapEnv.OverrideIfExists(BP_MapEnvironment_C)
 end
 
 local function BP_MIAGameInstance_C__OnSuccess_084D()
@@ -348,8 +341,6 @@ ExecuteInGameThread(function()
 
 	Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:OnSuccess_084D74CC438019371E505798B67750BF",
 			BP_MIAGameInstance_C__OnSuccess_084D)
-
-	InitDefaultMapEnvironment()
 end)
 
 -- Hook into new instances of MIAEventPictureWidget
