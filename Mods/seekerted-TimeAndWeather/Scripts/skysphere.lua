@@ -98,10 +98,15 @@ local SkySphere1Overrides = {
 	[Consts.MAP_NO.GIANT_VINE_BRIDGE] = ManualSkySphere,
 
 	-- Layer 5
+	[Consts.MAP_NO.SEA_OF_CORPSES_1] = OverrideSandyIceAreas,
+	[Consts.MAP_NO.SEA_OF_CORPSES_2] = OverrideSandyIceAreas,
+	[Consts.MAP_NO.HAIL_JAIL] = OverrideSandyIceAreas,
 	[Consts.MAP_NO.WATER_CRYSTALS_1] = OverrideWaterCrystals,
 	[Consts.MAP_NO.WATER_CRYSTALS_2] = OverrideWaterCrystals,
+	[Consts.MAP_NO.IDOFRONT_AREA] = OverrideSandyIceAreas,
 	[Consts.MAP_NO.SANDY_ICE_AREA_1] = OverrideSandyIceAreas,
 	[Consts.MAP_NO.SANDY_ICE_AREA_2] = OverrideSandyIceAreas,
+	[Consts.MAP_NO.IDOFRONT] = OverrideSandyIceAreas,
 }
 
 -- Override a BP_Sky_Sphere*_C's variables if it exists for the specific map

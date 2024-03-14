@@ -105,11 +105,13 @@ local function OverrideIdoFrontAreas(ME)
 	ME.EnvParamsMorning.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.3, G = 0.2, B = 0.2, A = 1}
 	ME.EnvParamsMorning.ExpFogColor_30_D55BFE85467585991BAC7A95C3A5B09B = {R = 0.006, G = 0.004, B = 0.004, A = 1}
 	ME.EnvParamsMorning.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320 = {R = 0.006, G = 0.004, B = 0.004, A = 1}
+	ME.EnvParamsMorning.ExpFogDirectionalColor_59_3798EC654A193C89E50A0EA32CB2BE8C = {R = 0.006, G = 0.004, B = 0.004, A = 1}
 
 	-- Makes the mornings "sunrise-y" as the default ones are *not* sunrise-y at all.
 	ME.EnvParamsEvening.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.4, G = 0.2, B = 0.1, A = 1}
 	ME.EnvParamsEvening.ExpFogColor_30_D55BFE85467585991BAC7A95C3A5B09B = {R = 0.006, G = 0.004, B = 0.004, A = 1}
 	ME.EnvParamsEvening.ExpFogColorInBadWeatherNight_76_B581C0FC45E9A92824F8F3BCCDCBF320 = {R = 0.006, G = 0.004, B = 0.004, A = 1}
+	ME.EnvParamsEvening.ExpFogDirectionalColor_59_3798EC654A193C89E50A0EA32CB2BE8C = {R = 0.006, G = 0.004, B = 0.004, A = 1}
 
 	ME.EnvParamsNight.SunLightColor_10_DEFB79DF4935B10FC66149A8CCBB15C6 = {R = 0.04, G = 0.06, B = 0.08, A = 1}
 end

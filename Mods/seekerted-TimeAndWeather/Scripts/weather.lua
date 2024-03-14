@@ -117,7 +117,8 @@ local function SetL4OutdoorsWeather(IsBadWeather, PlayTime)
 	end
 end
 
--- For Layer 5 (except Water Crystals 1 and 2 no weather, and Eternal Garden, which is just 75% ice, 25% none)
+-- For Layer 5 (except Water Crystals 1 and 2 no weather, and Eternal Garden, which is just 75% ice, 25% none; also
+-- except Ido Front, Ido Front Area, where they cannot have bad weather because it gets too dark and I can't change it)
 -- Good weather is 25% none, 25% ice, 50% snow
 -- Bad weather is equal distribution of rain, heavy rain, and thunder
 local function SetL5Weather(IsBadWeather, PlayMapNo, PlayTime)
@@ -131,7 +132,9 @@ local function SetL5Weather(IsBadWeather, PlayMapNo, PlayTime)
 		return
 	end
 
-	if IsBadWeather then
+	local IsIdoFrontMap = PlayMapNo == Consts.MAP_NO.IDOFRONT or PlayMapNo == Consts.MAP_NO.IDOFRONT_AREA
+
+	if IsBadWeather and not IsIdoFrontMap then
 		local BadWeatherType = GetRainType(PlayTime)
 		SetAbyssWeather(BadWeatherType)
 	else
