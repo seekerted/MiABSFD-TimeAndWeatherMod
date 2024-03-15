@@ -4,8 +4,9 @@ local Consts = require("consts")
 local Weather = {}
 
 local WEATHER_TRANSITION_TIME = 10
+local IsInstantTransition = true
 
-local function SetAbyssWeather(WeatherType, IsInstant)
+local function SetAbyssWeather(WeatherType)
 	local BP_TPSCamera_C = FindFirstOf("BP_TPSCamera_C")
 	if not BP_TPSCamera_C:IsValid() then
 		Utils.Log("BP_TPSCamera_C is not valid.")
@@ -13,7 +14,7 @@ local function SetAbyssWeather(WeatherType, IsInstant)
 	end
 
 	local TransitionTime = 0
-	if not IsInstant then
+	if not IsInstantTransition then
 		TransitionTime = WEATHER_TRANSITION_TIME
 	end
 
@@ -158,6 +159,7 @@ end
 
 function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank, IsInstant)
 	local IsBadWeather = IsBadWeather(PlayTime, WhistleRank)
+	IsInstantTransition = IsInstant
 
 	if Consts.MAP_NO.NETHERWORLD_GATE <= PlayMapNo and PlayMapNo <= Consts.MAP_NO.MULTILAYER_HILL then
 		SetL1Weather(IsBadWeather, PlayTime)
@@ -193,7 +195,7 @@ function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank, IsInstant)
 		end
 	end
 
-	SetAbyssWeather(Consts.WEATHER.NONE, IsInstant)
+	SetAbyssWeather(Consts.WEATHER.NONE)
 end
 
 -- Some maps have weather volumes (I'm not sure what they are) that when the player steps on them gets triggered.
