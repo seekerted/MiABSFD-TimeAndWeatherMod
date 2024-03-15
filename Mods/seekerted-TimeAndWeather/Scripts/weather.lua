@@ -3,25 +3,30 @@ local Consts = require("consts")
 
 local Weather = {}
 
-local WEATHER_TRANSITION_TIME = 60
+local WEATHER_TRANSITION_TIME = 10
 
-local function SetAbyssWeather(WeatherType)
+local function SetAbyssWeather(WeatherType, IsInstant)
 	local BP_TPSCamera_C = FindFirstOf("BP_TPSCamera_C")
 	if not BP_TPSCamera_C:IsValid() then
 		Utils.Log("BP_TPSCamera_C is not valid.")
 		return
 	end
 
+	local TransitionTime = 0
+	if not IsInstant then
+		TransitionTime = WEATHER_TRANSITION_TIME
+	end
+
 	BP_TPSCamera_C:WeatherTypeToEmitterIndex(WeatherType, {})
-	BP_TPSCamera_C:FadeOutWeatherEmitter(WeatherType, WEATHER_TRANSITION_TIME)
-	BP_TPSCamera_C:CreateWeatherEmitter(WeatherType, WEATHER_TRANSITION_TIME)
+	BP_TPSCamera_C:FadeOutWeatherEmitter(WeatherType, TransitionTime)
+	BP_TPSCamera_C:CreateWeatherEmitter(WeatherType, TransitionTime)
 	BP_TPSCamera_C.WindDirection = {Pitch = 180, Yaw = 0, Roll = 180}
 
 	local BP_MapEnvironment_C = FindFirstOf("BP_MapEnvironment_C")
 	if not BP_MapEnvironment_C:IsValid() then
 		Utils.Log("BP_MapEnvironment_C is not valid.")
 	else
-		BP_MapEnvironment_C:TransitionWeatherEnvironment(WeatherType, WEATHER_TRANSITION_TIME)
+		BP_MapEnvironment_C:TransitionWeatherEnvironment(WeatherType, TransitionTime)
 		BP_MapEnvironment_C:UpdateMapEnvironment()
 	end
 
@@ -151,7 +156,7 @@ local function SetL5Weather(IsBadWeather, PlayMapNo, PlayTime)
 	end
 end
 
-function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank)
+function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank, IsInstant)
 	local IsBadWeather = IsBadWeather(PlayTime, WhistleRank)
 
 	if Consts.MAP_NO.NETHERWORLD_GATE <= PlayMapNo and PlayMapNo <= Consts.MAP_NO.MULTILAYER_HILL then
@@ -188,7 +193,7 @@ function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank)
 		end
 	end
 
-	SetAbyssWeather(Consts.WEATHER.NONE)
+	SetAbyssWeather(Consts.WEATHER.NONE, IsInstant)
 end
 
 -- Some maps have weather volumes (I'm not sure what they are) that when the player steps on them gets triggered.

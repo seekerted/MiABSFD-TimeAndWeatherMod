@@ -294,7 +294,7 @@ local function TickPlayerTime(DeltaSeconds)
 			OverrideNanachiHideoutLightBeams()
 		end
 
-		Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle)
+		Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle, false)
 	end
 end
 
@@ -341,7 +341,7 @@ end
 local function BP_MIAGameInstance_C__OnSuccess_084D()
 	if IsDisabled(Utils.GI.PlayEventNo) then return end
 
-	Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle)
+	Weather.SetWeather(Utils.GI.PlayTime, Utils.GI.PlayMapNo, Utils.GI.PlayerAttribute.Whistle, true)
 end
 
 RegisterInitGameStatePostHook(function(Param_AGameStateBase)
