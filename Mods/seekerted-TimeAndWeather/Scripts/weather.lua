@@ -3,9 +3,9 @@ local Consts = require("consts")
 
 local Weather = {}
 
-local WEATHER_TRANSITION_TIME = 10
 local IsInstantTransition = true
 
+-- Actually apply the weather change depending on the weather type
 local function SetAbyssWeather(WeatherType)
 	local BP_TPSCamera_C = FindFirstOf("BP_TPSCamera_C")
 	if not BP_TPSCamera_C:IsValid() then
@@ -15,7 +15,7 @@ local function SetAbyssWeather(WeatherType)
 
 	local TransitionTime = 0
 	if not IsInstantTransition then
-		TransitionTime = WEATHER_TRANSITION_TIME
+		TransitionTime = Consts.WEATHER_TRANSITION_TIME
 	end
 
 	BP_TPSCamera_C:WeatherTypeToEmitterIndex(WeatherType, {})
@@ -157,6 +157,7 @@ local function SetL5Weather(IsBadWeather, PlayMapNo, PlayTime)
 	end
 end
 
+-- Change the weather depending on the PlayTime and the map the player is in
 function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank, IsInstant)
 	local IsBadWeather = IsBadWeather(PlayTime, WhistleRank)
 	IsInstantTransition = IsInstant
@@ -198,8 +199,7 @@ function Weather.SetWeather(PlayTime, PlayMapNo, WhistleRank, IsInstant)
 	SetAbyssWeather(Consts.WEATHER.NONE)
 end
 
--- Some maps have weather volumes (I'm not sure what they are) that when the player steps on them gets triggered.
--- Disable them.
+-- Some maps have weather volumes that when the player steps inside them changes the weather. This disables all of them
 function Weather.OverrideWeatherVolumes()
 	local MIAWeatherVolumes = FindAllOf("MIAWeatherVolume")
 	if not MIAWeatherVolumes then

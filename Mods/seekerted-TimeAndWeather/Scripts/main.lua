@@ -16,18 +16,6 @@ local SaveSession = {
 	PrevMapNo = nil,
 }
 
--- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
--- layer is 6 seconds in the first layer.
-local TIME_SPEED_PER_LAYER = {
-	[1] = 1,
-	[2] = 2,
-	[3] = 3,
-	[4] = 4,
-	[5] = 6,
-}
-
-local TIME_SEGMENT_TRANSITION_TIME = 60
-
 -- Time Segment now depends on the consts values
 local function GetTimeSegmentNoFromHour(Hour)
 	Hour = Hour * 100
@@ -138,7 +126,7 @@ local function GetTimeDilation(PrevMapNo, CurrentMapNo)
 	local TimeDilation = 1
 
 	if PrevMapInfo.Depth > NextMapInfo.Depth then
-		TimeDilation = (PrevMapInfo.Depth - NextMapInfo.Depth) / 1000 + TIME_SPEED_PER_LAYER[PrevMapInfo.Floor]
+		TimeDilation = (PrevMapInfo.Depth - NextMapInfo.Depth) / 1000 + Consts.TIME_SPEED_PER_LAYER[PrevMapInfo.Floor]
 	end
 
 	Utils.Log("Time dilation from %s (MapNo: %d, Layer: %d, Depth: %dm) -> %s (MapNo: %d, Layer: %d, Depth: %dm) is %02.2fx",
@@ -196,8 +184,9 @@ local function UpdateOrthBackground(New_MIAEventPictureWidget)
 
 	-- Validate if the MIAEventPictureWidget is actually the WBP_EvPic3006_C that we need.
 
-	if not New_MIAEventPictureWidget:IsValid() or not New_MIAEventPictureWidget:GetOuter():IsValid() or not New_MIAEventPictureWidget:GetOuter():GetOuter():IsValid()
-			then return end
+	if not New_MIAEventPictureWidget:IsValid() or not New_MIAEventPictureWidget:GetOuter():IsValid()
+			or not New_MIAEventPictureWidget:GetOuter():GetOuter():IsValid()
+		then return end
 
 	-- Grab the current instance of WBP_StageSelectOrth_C, and verify if the MIAEventPictureWidget grand-outer is that.
 	local WBP_StageSelectOrth_C = FindFirstOf("WBP_StageSelectOrth_C")
@@ -259,6 +248,7 @@ local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Par
 	SaveSession.PrevMapNo = BP_MIAGameInstance_C.PlayMapNo
 end
 
+-- The light in Nanachi's Hideout is all lightbeams, so we change the colors of those
 local function OverrideNanachiHideoutLightBeams()
 	local BP_LightBeam_M07_Cs = FindAllOf("BP_LightBeam_M07_C")
 	if not BP_LightBeam_M07_Cs then
@@ -298,6 +288,7 @@ local function TickPlayerTime(DeltaSeconds)
 	end
 end
 
+-- Called when Event Backgrounds are loaded (like VN backgrounds, but not limited to those)
 local function WBP_EventBG_C__OnLoaded_6C51(Param_WBP_EventBG_C, Param_Loaded)
 	if Utils.GI and IsDisabled(Utils.GI.PlayEventNo) then return end
 
@@ -327,7 +318,7 @@ local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
 	local BP_MapEnvironment_C = Param_BP_MapEnvironment_C:get()
 
 	-- Transition time in seconds
-	BP_MapEnvironment_C.TransitionTime = TIME_SEGMENT_TRANSITION_TIME
+	BP_MapEnvironment_C.TransitionTime = Consts.TIME_SEGMENT_TRANSITION_TIME
 
 	-- Set the time segment begins from the consts
 	BP_MapEnvironment_C.TimeSegmentInfo.MorningBegin_3_586EAB8541F79C4E67CC12AB11B70CC4 = Consts.TIME_SEGMENT_BEGIN.MorningBegin
@@ -338,6 +329,7 @@ local function BP_MapEnvironment_C__InitMapEnvActors(Param_BP_MapEnvironment_C)
 	MapEnv.OverrideIfExists(BP_MapEnvironment_C)
 end
 
+-- Called on successful level load. Around just before the fade out onto the game.
 local function BP_MIAGameInstance_C__OnSuccess_084D()
 	if IsDisabled(Utils.GI.PlayEventNo) then return end
 
@@ -359,6 +351,7 @@ RegisterInitGameStatePostHook(function(Param_AGameStateBase)
 		-- Apply overrides to the BP_Sky_Sphere*_C, depending on time of day
 		SS.OverrideIfExists(Utils.GI.PlayMapNo, GetTimeSegmentNoFromHour(SaveSession.PlayerTime.Hour))
 
+		-- Separate override for Nanachi's Hideout because the lighting there is neither MapEnvironment nor SkySphere
 		if Utils.GI.PlayMapNo == Consts.MAP_NO.NANACHIS_HIDEOUT then
 			OverrideNanachiHideoutLightBeams()
 		end

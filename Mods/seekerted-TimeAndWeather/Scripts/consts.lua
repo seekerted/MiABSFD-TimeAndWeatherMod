@@ -105,5 +105,19 @@ return {
 		SNOW = 8,
 		ICE = 9,
 		PETALS = 10,
-	}
+	},
+
+	-- On each layer, the time is {TimeSpeed} times as fast relative to the first layer. e.g. 1 second in the fifth
+	-- layer is 6 seconds in the first layer.
+	TIME_SPEED_PER_LAYER = {
+		[1] = 1,
+		[2] = 2,
+		[3] = 3,
+		[4] = 4,
+		[5] = 6,
+	},
+
+	-- Transition times
+	TIME_SEGMENT_TRANSITION_TIME = 60,
+	WEATHER_TRANSITION_TIME = 5,
 }
