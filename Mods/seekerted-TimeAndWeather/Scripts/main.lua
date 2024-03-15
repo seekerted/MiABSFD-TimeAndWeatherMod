@@ -218,16 +218,6 @@ local function UpdateOrthSubBackground(WBP_EventBG_C)
 	WBP_EventBG_C:SetColorAndOpacity(Consts.ORTH_TIME_SEGMENT[TimeSegmentNo])
 end
 
--- Called when player selects a save slot to load 
--- 0-3: Hello Abyss saves #1-4; 4-7: Deep in Abyss saves #5-8
-local function WBP_SaveLayout_C__LoadData(Param_WBP_SaveLayout_C, Param_Index)
-	-- Set the PlayerTime from OS time
-	SaveSession.PlayerTime = GetPlayerTimeFromOsDate(os.date("*t"))
-	ChangeGameTimeSegmentByHour(SaveSession.PlayerTime.Hour)
-
-	Utils.Log("Loading OS Time of %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
-end
-
 -- Called on the fade out into darkness on change map, or even any time the map is about the change (also called on Save
 -- loading)
 local function BP_MIAGameInstance_C__ChangeLevel(Param_BP_MIAGameInstance_C, Param_MapNo)
@@ -361,9 +351,6 @@ RegisterInitGameStatePostHook(function(Param_AGameStateBase)
 end)
 
 ExecuteInGameThread(function()
-	Utils.RegisterHookOnce("/Game/MadeInAbyss/UI/Save/WBP_SaveLayout.WBP_SaveLayout_C:LoadData",
-			WBP_SaveLayout_C__LoadData)
-
 	Utils.RegisterHookOnce("/Game/MadeInAbyss/Core/GameModes/BP_MIAGameInstance.BP_MIAGameInstance_C:ChangeLevel",
 			BP_MIAGameInstance_C__ChangeLevel)
 
@@ -404,3 +391,11 @@ local function HookMIAGameModeBase(New_MIAGameModeBase)
 	end
 end
 HookMIAGameModeBase(FindFirstOf("BP_MIAGameModeBase_C"))
+
+-- Set the PlayerTime from OS time
+local function SetPlayerTimeFromOsTime()
+	SaveSession.PlayerTime = GetPlayerTimeFromOsDate(os.date("*t"))
+
+	Utils.Log("Loading OS Time of %02d:%02.0f", SaveSession.PlayerTime.Hour, SaveSession.PlayerTime.Minute)
+end
+SetPlayerTimeFromOsTime()
