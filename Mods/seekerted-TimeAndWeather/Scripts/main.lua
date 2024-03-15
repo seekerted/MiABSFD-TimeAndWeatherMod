@@ -5,7 +5,7 @@ local MapEnv = require("mapenv")
 local SS = require("skysphere")
 local Weather = require("weather")
 
-Utils.Init("seekerted", "TimeAndWeather", "0.5.0")
+Utils.Init("seekerted", "TimeAndWeather", "1.0.0")
 
 local SaveSession = {
 	-- The Minute component is not an integer as delta values will be added to it.
