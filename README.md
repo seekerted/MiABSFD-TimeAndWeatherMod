@@ -2,17 +2,19 @@
 
 ## Features
 
-- **Time (Day/Night cycle)**. The in-game environment and background pictures change depending on the time. Time moves at a rate of 1 IRL second = 1 in-game minute. Time dilation is accounted for as well (time moves faster depending on how deep you are and where you're travelling to). It is felt when ascending.
+- **Time (Day/Night cycle)**. The in-game environment and background pictures change depending on the time. Time moves at a rate of 1 IRL second = 1 in-game minute. Time dilation is accounted for as well. The deeper you are, the faster time travels, however time dilation is only felt when ascending.
 - **Weather**. Every so often the weather will turn bad and may cause rain, snow, etc. The chances of bad weather increases the higher whistle rank you are.
 
-Please note that time and weather are only added in as cosmetics. They do not affect anything gameplay wise besides making the game look cooler. Well, besides maybe traversing during the nighttime and/or harsh weather, which can be quite a challenge. I recommend getting helmets with a flashlight on them!
+Time and weather are only added in as cosmetics. They do not affect anything gameplay wise besides making the game look cooler. Well, maybe besides the challenge of traversing through the Abyss during the nighttime and/or harsh weather. **I recommend getting helmets with a flashlight on them!**
+
+This mod will not affect Hello Abyss, as the story there heavily controls the time.
 
 > [!WARNING]
 > This mod is experimental and might cause your game to crash during gameplay. Please stock up on Mail Balloons and save regularly.
 
 ## Installation
 
-Get and install this mod via Nexus Mods and Vortex (guide also in the link): LINK TO NEXUS PAGE
+Get and install this mod via Nexus Mods and Vortex (guide also in the link): <https://www.nexusmods.com/madeinabyssbinarystarfallingintodarkness/mods/13/>
 
 ## Manual / Advanced Installation
 
